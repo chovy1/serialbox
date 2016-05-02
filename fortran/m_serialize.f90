@@ -164,6 +164,7 @@ PRIVATE
       fs_write_int_2d, &
       fs_write_int_3d, &
       fs_write_int_4d, &
+      fs_write_logical_0d, &
       fs_write_float_0d, &
       fs_write_float_1d, &
       fs_write_float_2d, &
@@ -187,6 +188,7 @@ PRIVATE
       fs_read_int_2d, &
       fs_read_int_3d, &
       fs_read_int_4d, &
+      fs_read_logical_0d, &
       fs_read_float_0d, &
       fs_read_float_1d, &
       fs_read_float_2d, &
@@ -1006,6 +1008,27 @@ END SUBROUTINE fs_write_int_4d
 !=============================================================================
 !=============================================================================
 
+SUBROUTINE fs_write_logical_0d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*)                        :: fieldname
+  LOGICAL, INTENT(IN), TARGET :: field
+
+  INTEGER(KIND=C_INT) :: field_int
+
+  IF (field) THEN
+    field_int = 1
+  ELSE
+    field_int = 0
+  ENDIF
+
+  CALL fs_write_int_0d(serializer, savepoint, fieldname, field_int)
+
+END SUBROUTINE fs_write_logical_0d
+
+!=============================================================================
+!=============================================================================
+
 SUBROUTINE fs_write_float_0d(serializer, savepoint, fieldname, field)
   TYPE(t_serializer), INTENT(IN)          :: serializer
   TYPE(t_savepoint) , INTENT(IN)          :: savepoint
@@ -1403,6 +1426,27 @@ SUBROUTINE fs_read_int_4d(serializer, savepoint, fieldname, field)
                       TRIM(fieldname), LEN_TRIM(fieldname), &
                       C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
 END SUBROUTINE fs_read_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_logical_0d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL, INTENT(OUT), TARGET :: field
+
+  INTEGER(KIND=C_INT) :: field_int
+
+  CALL fs_read_int_0d(serializer, savepoint, fieldname, field_int)
+
+  IF (field_int > 0) THEN
+    field = .TRUE.
+  ELSE
+    field = .FALSE.
+  ENDIF
+
+END SUBROUTINE fs_read_logical_0d
 
 !=============================================================================
 !=============================================================================
