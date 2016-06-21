@@ -33,7 +33,7 @@ PUBLIC :: &
   t_serializer, t_savepoint, &
   fs_create_serializer, fs_destroy_serializer, fs_serializer_openmode, fs_add_serializer_metainfo, &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
-  fs_field_exists, fs_register_field, fs_add_field_metainfo, fs_write_field, fs_read_field,        &
+  fs_field_exists, fs_get_field_size, fs_register_field, fs_add_field_metainfo, fs_write_field, fs_read_field,        &
   fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo
 
 PRIVATE
@@ -636,6 +636,40 @@ FUNCTION fs_field_exists(serializer, fieldname)
 END FUNCTION fs_field_exists
 
 !==============================================================================
+!+ Module function that return the size of the requested field
+!------------------------------------------------------------------------------
+
+FUNCTION fs_get_field_size(serializer, fieldname)
+  TYPE(t_serializer)    :: serializer
+  CHARACTER(LEN=*)      :: fieldname
+  INTEGER, DIMENSION(4) :: fs_get_field_size
+
+  INTERFACE
+    SUBROUTINE fs_get_field_size_(serializer, name, name_length, isize, jsize, ksize, lsize) &
+        BIND(c, name='fs_get_field_size')
+     USE, INTRINSIC :: iso_c_binding
+     TYPE(C_PTR), VALUE                    :: serializer
+     CHARACTER(KIND=C_CHAR), DIMENSION(*)  :: name
+     INTEGER(C_INT), VALUE                 :: name_length
+     INTEGER(C_INT), INTENT(OUT)           :: isize, jsize, ksize, lsize
+    END SUBROUTINE fs_get_field_size_
+  END INTERFACE
+
+  INTEGER(KIND=C_INT) :: isize, jsize, ksize, lsize
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_get_field_size_(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
+                           isize, jsize, ksize, lsize)
+    fs_get_field_size = (/ isize, jsize, ksize, lsize /)
+  ELSE
+    WRITE(*,*) "Error: field ", fieldname, " does not exist in the serializer"
+    WRITE(*,*) "Aborting"
+    STOP
+  END IF
+
+END FUNCTION fs_get_field_size
+
+!==============================================================================
 !+ Module procedure that checks that the size of the requested field is
 !  consistent with what the serializer has.
 !  If the sizes are not consistent, as error message is printed and the
@@ -658,15 +692,6 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, is
        INTEGER(C_INT), VALUE                 :: name_length
        INTEGER(C_INT), INTENT(OUT)           :: isize, jsize, ksize, lsize
      END SUBROUTINE check_size
-
-     SUBROUTINE fs_get_field_size(serializer, name, name_length, isize, jsize, ksize, lsize) &
-          BIND(c, name='fs_get_field_size')
-       USE, INTRINSIC :: iso_c_binding
-       TYPE(C_PTR), VALUE                    :: serializer
-       CHARACTER(KIND=C_CHAR), DIMENSION(*)  :: name
-       INTEGER(C_INT), VALUE                 :: name_length
-       INTEGER(C_INT), INTENT(OUT)           :: isize, jsize, ksize, lsize
-     END SUBROUTINE fs_get_field_size
 
      FUNCTION fs_get_element_size(serializer, name, name_length) &
           BIND(c, name='fs_get_element_size')
