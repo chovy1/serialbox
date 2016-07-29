@@ -119,6 +119,14 @@ bool Serializer::RegisterField(const std::string& name, std::string type, int by
     return false;
 }
 
+/**
+* @return True is returned iff the field is registered
+*/
+bool Serializer::HasField(const std::string& fieldname) const
+{
+	return fieldsTable_.HasField(fieldname);
+}
+
 const DataFieldInfo& Serializer::FindField(const std::string& fieldname) const
 {
     return fieldsTable_.Find(fieldname);

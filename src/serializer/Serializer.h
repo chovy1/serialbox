@@ -147,6 +147,12 @@ namespace ser {
                            int kMinusHalo, int kPlusHalo, int lMinusHalo, int lPlusHalo
                            );
 
+
+        /**
+        * @return True is returned iff the field is registered
+        */
+        bool HasField(const std::string& fieldname) const;
+
         /**
          * Gives access to field info.
          *
