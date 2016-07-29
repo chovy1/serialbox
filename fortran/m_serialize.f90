@@ -34,7 +34,8 @@ PUBLIC :: &
   fs_create_serializer, fs_destroy_serializer, fs_serializer_openmode, fs_add_serializer_metainfo, &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
   fs_field_exists, fs_get_field_size, fs_get_field_bounds, fs_register_field, fs_add_field_metainfo, fs_write_field, &
-  fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo
+  fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo, &
+  fs_allocate_allocatable, fs_allocate_pointer
 
 PRIVATE
 
@@ -125,7 +126,7 @@ PRIVATE
       fs_add_serializer_metainfo_f, &
       fs_add_serializer_metainfo_d, &
       fs_add_serializer_metainfo_s
-  END INTERFACE
+  END INTERFACE fs_add_serializer_metainfo
 
 
   !==============================================================================
@@ -138,7 +139,7 @@ PRIVATE
       fs_add_field_metainfo_f, &
       fs_add_field_metainfo_d, &
       fs_add_field_metainfo_s
-  END INTERFACE
+  END INTERFACE fs_add_field_metainfo
 
 
   !==============================================================================
@@ -151,7 +152,7 @@ PRIVATE
       fs_add_savepoint_metainfo_f, &
       fs_add_savepoint_metainfo_d, &
       fs_add_savepoint_metainfo_s
-  END INTERFACE
+  END INTERFACE fs_add_savepoint_metainfo
 
 
   !==============================================================================
@@ -177,7 +178,7 @@ PRIVATE
       fs_write_double_4d, &
       fs_write_chars_0d, &
       fs_write_chars_1d
-  END INTERFACE
+  END INTERFACE fs_write_field
 
 
   !==============================================================================
@@ -203,7 +204,49 @@ PRIVATE
       fs_read_double_4d, &
       fs_read_chars_0d, &
       fs_read_chars_1d
-  END INTERFACE
+  END INTERFACE fs_read_field
+
+
+  !==============================================================================
+  !+ Module interface to allocate the given pointer field
+  !------------------------------------------------------------------------------
+  INTERFACE fs_allocate_pointer
+    MODULE PROCEDURE &
+      fs_allocate_pointer_int_1d, &
+      fs_allocate_pointer_int_2d, &
+      fs_allocate_pointer_int_3d, &
+      fs_allocate_pointer_int_4d, &
+      fs_allocate_pointer_float_1d, &
+      fs_allocate_pointer_float_2d, &
+      fs_allocate_pointer_float_3d, &
+      fs_allocate_pointer_float_4d, &
+      fs_allocate_pointer_double_1d, &
+      fs_allocate_pointer_double_2d, &
+      fs_allocate_pointer_double_3d, &
+      fs_allocate_pointer_double_4d, &
+      fs_allocate_pointer_chars_1d
+  END INTERFACE fs_allocate_pointer
+
+
+  !==============================================================================
+  !+ Module interface to allocate the given allocatable field
+  !------------------------------------------------------------------------------
+  INTERFACE fs_allocate_allocatable
+    MODULE PROCEDURE &
+      fs_allocate_allocatable_int_1d, &
+      fs_allocate_allocatable_int_2d, &
+      fs_allocate_allocatable_int_3d, &
+      fs_allocate_allocatable_int_4d, &
+      fs_allocate_allocatable_float_1d, &
+      fs_allocate_allocatable_float_2d, &
+      fs_allocate_allocatable_float_3d, &
+      fs_allocate_allocatable_float_4d, &
+      fs_allocate_allocatable_double_1d, &
+      fs_allocate_allocatable_double_2d, &
+      fs_allocate_allocatable_double_3d, &
+      fs_allocate_allocatable_double_4d, &
+      fs_allocate_allocatable_chars_1d
+  END INTERFACE fs_allocate_allocatable
 
 CONTAINS
 
@@ -1895,6 +1938,379 @@ SUBROUTINE fs_read_chars_1d(serializer, savepoint, fieldname, field)
   field = ""
 
 END SUBROUTINE fs_read_chars_1d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_pointer_int_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), POINTER :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_pointer_int_1d
+
+
+SUBROUTINE fs_allocate_pointer_int_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_pointer_int_2d
+
+
+SUBROUTINE fs_allocate_pointer_int_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_pointer_int_3d
+
+
+SUBROUTINE fs_allocate_pointer_int_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_pointer_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_pointer_float_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_pointer_float_1d
+
+
+SUBROUTINE fs_allocate_pointer_float_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_pointer_float_2d
+
+
+SUBROUTINE fs_allocate_pointer_float_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_pointer_float_3d
+
+
+SUBROUTINE fs_allocate_pointer_float_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_pointer_float_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_pointer_double_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_pointer_double_1d
+
+
+SUBROUTINE fs_allocate_pointer_double_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_pointer_double_2d
+
+
+SUBROUTINE fs_allocate_pointer_double_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_pointer_double_3d
+
+
+SUBROUTINE fs_allocate_pointer_double_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_pointer_double_4d
+
+SUBROUTINE fs_allocate_pointer_chars_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT), ALLOCATABLE  :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_pointer_chars_1d
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_allocatable_int_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_allocatable_int_1d
+
+
+SUBROUTINE fs_allocate_allocatable_int_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_allocatable_int_2d
+
+
+SUBROUTINE fs_allocate_allocatable_int_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_allocatable_int_3d
+
+
+SUBROUTINE fs_allocate_allocatable_int_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_allocatable_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_allocatable_float_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_allocatable_float_1d
+
+
+SUBROUTINE fs_allocate_allocatable_float_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_allocatable_float_2d
+
+
+SUBROUTINE fs_allocate_allocatable_float_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_allocatable_float_3d
+
+
+SUBROUTINE fs_allocate_allocatable_float_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_allocatable_float_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_allocatable_double_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_allocatable_double_1d
+
+
+SUBROUTINE fs_allocate_allocatable_double_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+
+END SUBROUTINE fs_allocate_allocatable_double_2d
+
+
+SUBROUTINE fs_allocate_allocatable_double_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+
+END SUBROUTINE fs_allocate_allocatable_double_3d
+
+
+SUBROUTINE fs_allocate_allocatable_double_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+
+END SUBROUTINE fs_allocate_allocatable_double_4d
+
+SUBROUTINE fs_allocate_allocatable_chars_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT), ALLOCATABLE  :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  bounds = fs_get_field_bounds(serializer, fieldname)
+
+  ALLOCATE(field(bounds(1,1):bounds(1,2)))
+
+END SUBROUTINE fs_allocate_allocatable_chars_1d
 
 END MODULE m_serialize
 
