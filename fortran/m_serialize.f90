@@ -33,8 +33,8 @@ PUBLIC :: &
   t_serializer, t_savepoint, &
   fs_create_serializer, fs_destroy_serializer, fs_serializer_openmode, fs_add_serializer_metainfo, &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
-  fs_field_exists, fs_get_field_size, fs_register_field, fs_add_field_metainfo, fs_write_field, fs_read_field,        &
-  fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo
+  fs_field_exists, fs_get_field_size, fs_get_field_bounds, fs_register_field, fs_add_field_metainfo, fs_write_field, &
+  fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo
 
 PRIVATE
 
@@ -174,7 +174,9 @@ PRIVATE
       fs_write_double_1d, &
       fs_write_double_2d, &
       fs_write_double_3d, &
-      fs_write_double_4d
+      fs_write_double_4d, &
+      fs_write_chars_0d, &
+      fs_write_chars_1d
   END INTERFACE
 
 
@@ -198,7 +200,9 @@ PRIVATE
       fs_read_double_1d, &
       fs_read_double_2d, &
       fs_read_double_3d, &
-      fs_read_double_4d
+      fs_read_double_4d, &
+      fs_read_chars_0d, &
+      fs_read_chars_1d
   END INTERFACE
 
 CONTAINS
@@ -670,6 +674,46 @@ FUNCTION fs_get_field_size(serializer, fieldname)
 END FUNCTION fs_get_field_size
 
 !==============================================================================
+!+ Module function that return the index bounds of the requested field
+!------------------------------------------------------------------------------
+
+FUNCTION fs_get_field_bounds(serializer, fieldname)
+  TYPE(t_serializer)    :: serializer
+  CHARACTER(LEN=*)      :: fieldname
+  INTEGER, DIMENSION(4,2) :: fs_get_field_bounds
+
+  INTERFACE
+    SUBROUTINE fs_get_fieldinfo_(serializer, name, name_length, bytes_per_element,               &
+                      isize, jsize, ksize, lsize, iminushalo, iplushalo, jminushalo, jplushalo,  &
+                      kminushalo, kplushalo, lminushalo, lplushalo) &
+        BIND(c, name='fs_get_fieldinfo')
+     USE, INTRINSIC :: iso_c_binding
+     TYPE(C_PTR), VALUE                    :: serializer
+     CHARACTER(KIND=C_CHAR), DIMENSION(*)  :: name
+     INTEGER(C_INT), VALUE                 :: name_length
+     INTEGER(C_INT), INTENT(OUT)           :: bytes_per_element, isize, jsize, ksize, lsize, iminushalo, iplushalo, &
+                                              jminushalo, jplushalo, kminushalo, kplushalo, lminushalo, lplushalo
+    END SUBROUTINE fs_get_fieldinfo_
+  END INTERFACE
+
+  INTEGER(KIND=C_INT) :: bytes_per_element, isize, jsize, ksize, lsize, &
+                         iminushalo, iplushalo, jminushalo, jplushalo, kminushalo, kplushalo, lminushalo, lplushalo
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_get_fieldinfo_(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
+                           bytes_per_element, isize, jsize, ksize, lsize, &
+                           iminushalo, iplushalo, jminushalo, jplushalo, kminushalo, kplushalo, lminushalo, lplushalo)
+    fs_get_field_bounds = RESHAPE((/ iminushalo, jminushalo, kminushalo, lminushalo, &
+                                     iplushalo,  jplushalo,  kplushalo,  lplushalo /), SHAPE(fs_get_field_bounds))
+  ELSE
+    WRITE(*,*) "Error: field ", fieldname, " does not exist in the serializer"
+    WRITE(*,*) "Aborting"
+    STOP
+  END IF
+
+END FUNCTION fs_get_field_bounds
+
+!==============================================================================
 !+ Module procedure that checks that the size of the requested field is
 !  consistent with what the serializer has.
 !  If the sizes are not consistent, as error message is printed and the
@@ -731,7 +775,7 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, is
     IF (PRESENT(lbounds)) THEN
       lb4d(1:SIZE(lbounds)) = lbounds
     END IF
-    ub4d = (/ 1, 1, 1, 1 /)
+    ub4d = (/ isize, jsize, ksize, lsize /)
     IF (PRESENT(ubounds)) THEN
       ub4d(1:SIZE(ubounds)) = ubounds
     END IF
@@ -1367,6 +1411,33 @@ END SUBROUTINE fs_write_double_4d
 !=============================================================================
 !=============================================================================
 
+SUBROUTINE fs_write_chars_0d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
+  CHARACTER(LEN=*), INTENT(IN)            :: field
+
+  !TODO Characters not supported yet !
+
+END SUBROUTINE fs_write_chars_0d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_write_chars_1d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
+  CHARACTER(LEN=*), INTENT(IN)            :: field(:)
+  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  !TODO Characters not supported yet !
+
+END SUBROUTINE fs_write_chars_1d
+
+!=============================================================================
+!=============================================================================
+
 SUBROUTINE fs_read_int_0d(serializer, savepoint, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   TYPE(t_savepoint) , INTENT(IN)           :: savepoint
@@ -1798,6 +1869,32 @@ SUBROUTINE fs_read_double_4d(serializer, savepoint, fieldname, field)
                       TRIM(fieldname), LEN_TRIM(fieldname), &
                       C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
 END SUBROUTINE fs_read_double_4d
+
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_chars_0d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT)            :: field
+
+  !TODO Characters not supported yet !
+  field = ""
+
+END SUBROUTINE fs_read_chars_0d
+
+SUBROUTINE fs_read_chars_1d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT)            :: field(:)
+
+  !TODO Characters not supported yet !
+  field = ""
+
+END SUBROUTINE fs_read_chars_1d
 
 END MODULE m_serialize
 
