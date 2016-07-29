@@ -488,8 +488,8 @@ void fs_check_size(void* serializer, const char* fieldname, int namelength, int*
     int ref_sizes[4] = { info.iSize(), info.jSize(), info.kSize(), info.lSize() };
 
     // Check rank
-    int actual_rank = (actual_sizes[0] != 0 ? 1 : 0) + (actual_sizes[1] != 0 ? 1 : 0) + (actual_sizes[2] != 0 ? 1 : 0) + (actual_sizes[3] != 0 ? 1 : 0);
-    int ref_rank = (ref_sizes[0] != 0 ? 1 : 0) + (ref_sizes[1] != 0 ? 1 : 0) + (ref_sizes[2] != 0 ? 1 : 0) + (ref_sizes[3] != 0 ? 1 : 0);
+    int actual_rank = (actual_sizes[0] != 1 ? 1 : 0) + (actual_sizes[1] != 1 ? 1 : 0) + (actual_sizes[2] != 1 ? 1 : 0) + (actual_sizes[3] != 1 ? 1 : 0);
+    int ref_rank = (ref_sizes[0] != 1 ? 1 : 0) + (ref_sizes[1] != 1 ? 1 : 0) + (ref_sizes[2] != 1 ? 1 : 0) + (ref_sizes[3] != 1 ? 1 : 0);
 
     if (actual_rank != ref_rank)
     {
