@@ -35,7 +35,7 @@ PUBLIC :: &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
   fs_field_exists, fs_get_field_size, fs_get_field_bounds, fs_register_field, fs_add_field_metainfo, fs_write_field, &
   fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo, &
-  fs_allocate_allocatable, fs_allocate_pointer
+  fs_allocate_allocatable, fs_allocate_pointer, fs_register_derived_type_field
 
 PRIVATE
 
@@ -166,6 +166,10 @@ PRIVATE
       fs_write_int_3d, &
       fs_write_int_4d, &
       fs_write_logical_0d, &
+      fs_write_logical_1d, &
+      fs_write_logical_2d, &
+      fs_write_logical_3d, &
+      fs_write_logical_4d, &
       fs_write_float_0d, &
       fs_write_float_1d, &
       fs_write_float_2d, &
@@ -192,6 +196,10 @@ PRIVATE
       fs_read_int_3d, &
       fs_read_int_4d, &
       fs_read_logical_0d, &
+      fs_read_logical_1d, &
+      fs_read_logical_2d, &
+      fs_read_logical_3d, &
+      fs_read_logical_4d, &
       fs_read_float_0d, &
       fs_read_float_1d, &
       fs_read_float_2d, &
@@ -216,6 +224,10 @@ PRIVATE
       fs_allocate_pointer_int_2d, &
       fs_allocate_pointer_int_3d, &
       fs_allocate_pointer_int_4d, &
+      fs_allocate_pointer_logical_1d, &
+      fs_allocate_pointer_logical_2d, &
+      fs_allocate_pointer_logical_3d, &
+      fs_allocate_pointer_logical_4d, &
       fs_allocate_pointer_float_1d, &
       fs_allocate_pointer_float_2d, &
       fs_allocate_pointer_float_3d, &
@@ -237,6 +249,10 @@ PRIVATE
       fs_allocate_allocatable_int_2d, &
       fs_allocate_allocatable_int_3d, &
       fs_allocate_allocatable_int_4d, &
+      fs_allocate_allocatable_logical_1d, &
+      fs_allocate_allocatable_logical_2d, &
+      fs_allocate_allocatable_logical_3d, &
+      fs_allocate_allocatable_logical_4d, &
       fs_allocate_allocatable_float_1d, &
       fs_allocate_allocatable_float_2d, &
       fs_allocate_allocatable_float_3d, &
@@ -368,6 +384,34 @@ FUNCTION fs_serializer_openmode(serializer)
   fs_serializer_openmode = fs_serializer_openmode_(serializer%serializer_ptr)
 
 END FUNCTION fs_serializer_openmode
+
+! TODO Implement correctly
+!==============================================================================
+!+ Module procedure that returns the prefix of the given serializer.
+!------------------------------------------------------------------------------
+!FUNCTION fs_serializer_prefix(serializer)
+!
+!  INTEGER, PARAMETER :: prefix_length = 256
+!  CHARACTER(prefix_length) :: prefix_string, fs_serializer_prefix
+!  CHARACTER(KIND=C_CHAR), DIMENSION(prefix_length) :: prefix
+!  TYPE(t_serializer), INTENT(IN) :: serializer
+!
+!  ! External function
+!  INTERFACE
+!     SUBROUTINE fs_serializer_prefix_(serializer, val) &
+!          BIND(c, name='fs_serializer_prefix')
+!       USE, INTRINSIC :: iso_c_binding
+!       TYPE(C_PTR), INTENT(IN), VALUE       :: serializer
+!       CHARACTER(KIND=C_CHAR), DIMENSION(*) :: val
+!     END SUBROUTINE fs_serializer_prefix_
+!  END INTERFACE
+!
+!  CALL fs_serializer_prefix_(serializer%serializer_ptr, prefix)
+!
+!  WRITE (prefix_string, '(A)') prefix
+!  fs_serializer_prefix = prefix_string
+!
+!END FUNCTION fs_serializer_prefix
 
 
 SUBROUTINE fs_add_serializer_metainfo_b(serializer, key, val)
@@ -1001,6 +1045,36 @@ END SUBROUTINE fs_add_savepoint_metainfo_s
 !=============================================================================
 !=============================================================================
 
+SUBROUTINE fs_register_derived_type_field(serializer, fieldname, data_type, lbounds, ubounds)
+  TYPE(t_serializer) :: serializer
+  CHARACTER(LEN=*)   :: fieldname, data_type
+
+  ! Christian, 04.07.2017
+  ! Attention - This is for a hack missusing the halo field for storing index bounds
+  ! TODO Bounds mit Size abgleichen
+  INTEGER, DIMENSION(:), INTENT(in), OPTIONAL :: lbounds, ubounds
+  INTEGER, DIMENSION(4) :: sizes, lb4d, ub4d
+
+  IF(.NOT. fs_field_exists(serializer, fieldname) .AND. fs_serializer_openmode(serializer) /= 'r') THEN
+    lb4d = (/ 1, 1, 1, 1 /)
+    IF (PRESENT(lbounds)) THEN
+      lb4d(1:SIZE(lbounds)) = lbounds
+    END IF
+    ub4d = (/ 1, 1, 1, 1 /)
+    IF (PRESENT(ubounds)) THEN
+      ub4d(1:SIZE(ubounds)) = ubounds
+    END IF
+    sizes = ABS(ub4d - lb4d) + 1
+
+    CALL fs_register_field(serializer, fieldname, data_type, 0, sizes(1), sizes(2), sizes(3), sizes(4), &
+                           lb4d(1), ub4d(1), lb4d(2), ub4d(2), lb4d(3), ub4d(3), lb4d(4), ub4d(4))
+  END IF
+
+END SUBROUTINE fs_register_derived_type_field
+
+!=============================================================================
+!=============================================================================
+
 SUBROUTINE fs_write_int_0d(serializer, savepoint, fieldname, field)
   TYPE(t_serializer), INTENT(IN)          :: serializer
   TYPE(t_savepoint) , INTENT(IN)          :: savepoint
@@ -1041,7 +1115,7 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1072,7 +1146,7 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1104,7 +1178,7 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1136,7 +1210,7 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1173,6 +1247,94 @@ SUBROUTINE fs_write_logical_0d(serializer, savepoint, fieldname, field)
   CALL fs_write_int_0d(serializer, savepoint, fieldname, field_int)
 
 END SUBROUTINE fs_write_logical_0d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_write_logical_1d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*)                        :: fieldname
+  LOGICAL, INTENT(IN), TARGET :: field(:)
+  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1))
+
+  WHERE(field(:))
+    field_int(:) = 1
+  ELSEWHERE
+    field_int(:) = 0
+  END WHERE
+
+  CALL fs_write_int_1d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
+
+END SUBROUTINE fs_write_logical_1d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_write_logical_2d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*)                        :: fieldname
+  LOGICAL, INTENT(IN), TARGET :: field(:,:)
+  INTEGER, DIMENSION(2), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2))
+
+  WHERE(field(:,:))
+    field_int(:,:) = 1
+  ELSEWHERE
+    field_int(:,:) = 0
+  END WHERE
+
+  CALL fs_write_int_2d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
+
+END SUBROUTINE fs_write_logical_2d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_write_logical_3d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*)                        :: fieldname
+  LOGICAL, INTENT(IN), TARGET :: field(:,:,:)
+  INTEGER, DIMENSION(3), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3))
+
+  WHERE(field(:,:,:))
+    field_int(:,:,:) = 1
+  ELSEWHERE
+    field_int(:,:,:) = 0
+  END WHERE
+
+  CALL fs_write_int_3d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
+
+END SUBROUTINE fs_write_logical_3d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_write_logical_4d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*)                        :: fieldname
+  LOGICAL, INTENT(IN), TARGET :: field(:,:,:,:)
+  INTEGER, DIMENSION(4), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), SIZE(field, 4))
+
+  WHERE(field(:,:,:,:))
+    field_int(:,:,:,:) = 1
+  ELSEWHERE
+    field_int(:,:,:,:) = 0
+  END WHERE
+
+  CALL fs_write_int_4d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
+
+END SUBROUTINE fs_write_logical_4d
 
 !=============================================================================
 !=============================================================================
@@ -1217,7 +1379,7 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1248,7 +1410,7 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1279,7 +1441,7 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1311,7 +1473,7 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                        SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1371,7 +1533,7 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1402,7 +1564,9 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0 .AND. .NOT. (SIZE(field) == 1 .AND. ANY(SHAPE(field) > 1))) THEN
+
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1433,7 +1597,7 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1465,7 +1629,7 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
                                                                          SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1525,7 +1689,7 @@ SUBROUTINE fs_read_int_0d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1551,7 +1715,7 @@ SUBROUTINE fs_read_int_1d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1581,7 +1745,7 @@ SUBROUTINE fs_read_int_2d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1611,7 +1775,7 @@ SUBROUTINE fs_read_int_3d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1640,7 +1804,7 @@ SUBROUTINE fs_read_int_4d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4))
 
@@ -1668,15 +1832,84 @@ SUBROUTINE fs_read_logical_0d(serializer, savepoint, fieldname, field)
 
   INTEGER(KIND=C_INT) :: field_int
 
-  CALL fs_read_int_0d(serializer, savepoint, fieldname, field_int)
-
-  IF (field_int > 0) THEN
-    field = .TRUE.
-  ELSE
-    field = .FALSE.
-  ENDIF
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_read_int_0d(serializer, savepoint, fieldname, field_int)
+    field = field_int > 0
+  END IF
 
 END SUBROUTINE fs_read_logical_0d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_logical_1d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL, INTENT(OUT), TARGET :: field(:)
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1))
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_read_int_1d(serializer, savepoint, fieldname, field_int)
+    field = field_int > 0
+  END IF
+
+END SUBROUTINE fs_read_logical_1d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_logical_2d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL, INTENT(OUT), TARGET :: field(:,:)
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2))
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_read_int_2d(serializer, savepoint, fieldname, field_int)
+    field = field_int > 0
+  END IF
+
+END SUBROUTINE fs_read_logical_2d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_logical_3d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL, INTENT(OUT), TARGET :: field(:,:,:)
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3))
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_read_int_3d(serializer, savepoint, fieldname, field_int)
+    field = field_int > 0
+  END IF
+
+END SUBROUTINE fs_read_logical_3d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_read_logical_4d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL, INTENT(OUT), TARGET :: field(:,:,:,:)
+
+  INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), SIZE(field, 4))
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    CALL fs_read_int_4d(serializer, savepoint, fieldname, field_int)
+    field = field_int > 0
+  END IF
+
+END SUBROUTINE fs_read_logical_4d
 
 !=============================================================================
 !=============================================================================
@@ -1694,7 +1927,7 @@ SUBROUTINE fs_read_float_0d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1720,7 +1953,7 @@ SUBROUTINE fs_read_float_1d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1750,7 +1983,7 @@ SUBROUTINE fs_read_float_2d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1780,7 +2013,7 @@ SUBROUTINE fs_read_float_3d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1809,7 +2042,7 @@ SUBROUTINE fs_read_float_4d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                        SIZE(field, 3), SIZE(field, 4))
 
@@ -1842,7 +2075,7 @@ SUBROUTINE fs_read_double_0d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1868,7 +2101,7 @@ SUBROUTINE fs_read_double_1d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1898,7 +2131,7 @@ SUBROUTINE fs_read_double_2d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1928,7 +2161,7 @@ SUBROUTINE fs_read_double_3d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1957,7 +2190,7 @@ SUBROUTINE fs_read_double_4d(serializer, savepoint, fieldname, field)
   ! This workaround is needed for gcc < 4.9
   padd=>field
 
-  IF (ASSOCIATED(padd) .OR. fs_field_exists(serializer, fieldname)) THEN
+  IF (fs_field_exists(serializer, fieldname)) THEN
     CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
                                                                          SIZE(field, 3), SIZE(field, 4))
 
@@ -2069,6 +2302,76 @@ SUBROUTINE fs_allocate_pointer_int_4d(serializer, fieldname, field)
   END IF
 
 END SUBROUTINE fs_allocate_pointer_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_pointer_logical_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_logical_1d
+
+
+SUBROUTINE fs_allocate_pointer_logical_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_logical_2d
+
+
+SUBROUTINE fs_allocate_pointer_logical_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_logical_3d
+
+
+SUBROUTINE fs_allocate_pointer_logical_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_logical_4d
 
 !=============================================================================
 !=============================================================================
@@ -2290,6 +2593,68 @@ SUBROUTINE fs_allocate_allocatable_int_4d(serializer, fieldname, field)
   END IF
 
 END SUBROUTINE fs_allocate_allocatable_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_allocatable_logical_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_logical_1d
+
+
+SUBROUTINE fs_allocate_allocatable_logical_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_logical_2d
+
+
+SUBROUTINE fs_allocate_allocatable_logical_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_logical_3d
+
+
+SUBROUTINE fs_allocate_allocatable_logical_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_logical_4d
 
 !=============================================================================
 !=============================================================================

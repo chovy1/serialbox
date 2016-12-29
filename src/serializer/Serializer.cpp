@@ -32,9 +32,13 @@ void Serializer::Init(const std::string& directory, const std::string& prefix, S
 
     // Clean the tables if mode is write
     if (mode_ == SerializerOpenModeWrite)
+    {
         pFileFormat_->CleanTables();
+    }
     else
+    {
         pFileFormat_->ImportTables();
+    }
 
     // Initiaize binary serializer
     binarySerializer_.Init();
@@ -151,6 +155,10 @@ void Serializer::WriteField(const std::string& fieldName, const Savepoint& savep
 {
     // Don't write if serialization is disabeld
     if (enabled_ < 0) return;
+
+
+    // *** DEBUG ***
+    std::ostream& sout = std::cout;
 
     sout << "Writing field " << fieldName << " at savepoint " << savepoint.ToString()
          << " with data at " << pData << "\n";

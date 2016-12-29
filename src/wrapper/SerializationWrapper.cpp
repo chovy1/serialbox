@@ -67,6 +67,13 @@ char fs_serializer_openmode(void* serializer)
     return ' ';
 }
 
+void fs_serializer_prefix(void* serializer, char* value)
+{
+    Serializer& sp = *reinterpret_cast<Serializer*>(serializer);
+    std::string v = sp.prefix();
+    std::strcpy(value, v.c_str());
+}
+
 int fs_serializer_metainfo_size(void* serializer)
 {
     return reinterpret_cast<const Serializer*>(serializer)->globalMetainfo().size();
@@ -540,7 +547,7 @@ void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
         };
     const bool storage[4] = { info.iSize() > 1, info.jSize() > 1, info.kSize() > 1, info.lSize() > 1 };
     const int rank       = (strides[0] > 0 ? 1 : 0) + (strides[1] > 0 ? 1 : 0) + (strides[2] > 0 ? 1 : 0) + (strides[3] > 0 ? 1 : 0);
-    const int shouldrank = (storage[0] > 0 ? 1 : 0) + (storage[1] > 0 ? 1 : 0) + (storage[2] > 0 ? 1 : 0) + (storage[3] > 0 ? 1 : 0);
+    const int shouldrank = (storage[0] ? 1 : 0) + (storage[1] ? 1 : 0) + (storage[2] ? 1 : 0) + (storage[3] ? 1 : 0);
     if (rank != shouldrank)
     {
         std::cout << "Error: field " << std::string(fieldname, namelength) << " has rank " << shouldrank

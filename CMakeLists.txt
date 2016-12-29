@@ -26,8 +26,9 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/fortran )
 install(DIRECTORY ${CMAKE_BINARY_DIR}/fortran/ DESTINATION include/fortran FILES_MATCHING PATTERN "*.mod" PATTERN "CMake*" EXCLUDE )
 
 set(CXX11_FLAGS "-std=c++11")
+set(CXX11_PIC_FLAG "-fPIC")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${CXX11_PIC_FLAG}")
 
 function(serialbox_add_test test_name )
   #ignore the execute prefix in case it is not a valid executable prefix
