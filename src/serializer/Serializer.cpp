@@ -158,7 +158,7 @@ void Serializer::WriteField(const std::string& fieldName, const Savepoint& savep
 
 
     // *** DEBUG ***
-    std::ostream& sout = std::cout;
+    //std::ostream& sout = std::cout;
 
     sout << "Writing field " << fieldName << " at savepoint " << savepoint.ToString()
          << " with data at " << pData << "\n";
