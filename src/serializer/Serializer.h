@@ -125,6 +125,7 @@ namespace ser {
          * @param name The name of the field
          * @param type The name of the data type (e.g. "double", "float")
          * @param bytesPerElement The size in bytes of a scalar value (e.g. 8 for doubles)
+         * @param rank The rank
          * @param iSize The size of the first dimension
          * @param jSize The size of the second dimension
          * @param kSize The size of the third dimension
@@ -142,7 +143,7 @@ namespace ser {
          *         false if the field was already registered with matching information.
          */
         bool RegisterField(const std::string& name, std::string type, int bytesPerElement,
-                           int iSize, int jSize, int kSize, int lSize,
+                           int rank, int iSize, int jSize, int kSize, int lSize,
                            int iMinusHalo, int iPlusHalo, int jMinusHalo, int jPlusHalo,
                            int kMinusHalo, int kPlusHalo, int lMinusHalo, int lPlusHalo
                            );
@@ -398,10 +399,14 @@ namespace ser {
         const IJKBoundary& boundary = field.boundary();
         const int bytesPerElement = sizeof(typename TDataField::ValueType);
 
+        // Compute rank
+        int rank = (size.iSize() != 1 ? 1: 0) + (size.jSize() != 1 ? 1: 0) + (size.kSize() != 1 ? 1: 0);
+
+
         // Register field
         // This will check for consistency
         this->RegisterField(name, type_name<typename TDataField::ValueType>(), bytesPerElement,
-                            size.iSize(), size.jSize(), size.kSize(), 1,
+        				    rank, size.iSize(), size.jSize(), size.kSize(), 1,
                             -boundary.iMinusOffset(), boundary.iPlusOffset(),
                             -boundary.jMinusOffset(), boundary.jPlusOffset(),
                             -boundary.kMinusOffset(), boundary.kPlusOffset(),

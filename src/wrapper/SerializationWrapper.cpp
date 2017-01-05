@@ -254,14 +254,14 @@ void fs_fields_at_savepoint_names(void* serializer, void* savepoint, char** name
 }
 
 void fs_register_field(void* serializer, const char* name, int name_length,
-                       const char* data_type, int data_type_length, int bytes_per_element,
-                       int isize, int jsize, int ksize, int lsize,
+                       const char* data_type, int data_type_length,
+                       int rank, int bytes_per_element, int isize, int jsize, int ksize, int lsize,
                        int iminushalo, int iplushalo, int jminushalo, int jplushalo,
                        int kminushalo, int kplushalo, int lminushalo, int lplushalo)
 {
     reinterpret_cast<Serializer*>(serializer)->RegisterField(
                          std::string(name, name_length), std::string(data_type, data_type_length),
-                         bytes_per_element, isize, jsize, ksize, lsize,
+						 rank, bytes_per_element, isize, jsize, ksize, lsize,
                          iminushalo, iplushalo, jminushalo, jplushalo,
                          kminushalo, kplushalo, lminushalo, lplushalo);
 }
@@ -482,7 +482,7 @@ void fs_print_debuginfo(void* serializer)
     std::cout << reinterpret_cast<Serializer*>(serializer)->ToString() << std::endl;
 }
 
-void fs_check_size(void* serializer, const char* fieldname, int namelength, int* isize, int* jsize, int* ksize, int* lsize)
+void fs_check_size(void* serializer, const char* fieldname, int namelength, int rank, int* isize, int* jsize, int* ksize, int* lsize)
 {
     // Take "proposed" size (i.e. size of field in Fortran/Python),
     // compares to size as registered and reorders the sizes
@@ -495,13 +495,12 @@ void fs_check_size(void* serializer, const char* fieldname, int namelength, int*
     int ref_sizes[4] = { info.iSize(), info.jSize(), info.kSize(), info.lSize() };
 
     // Check rank
-    int actual_rank = (actual_sizes[0] != 1 ? 1 : 0) + (actual_sizes[1] != 1 ? 1 : 0) + (actual_sizes[2] != 1 ? 1 : 0) + (actual_sizes[3] != 1 ? 1 : 0);
     int ref_rank = (ref_sizes[0] != 1 ? 1 : 0) + (ref_sizes[1] != 1 ? 1 : 0) + (ref_sizes[2] != 1 ? 1 : 0) + (ref_sizes[3] != 1 ? 1 : 0);
 
-    if (actual_rank != ref_rank)
+    if (rank != info.rank())
     {
-        std::cout << "Error: field " << fieldname_str << " passed with rank " << actual_rank
-                  << ", but was registered with rank " << ref_rank << "\n";
+        std::cout << "Error: field " << fieldname_str << " passed with rank " << rank
+                  << ", but was registered with rank " << info.rank() << "\n";
         std::exit(1);
     }
 

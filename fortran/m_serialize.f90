@@ -549,21 +549,21 @@ END SUBROUTINE fs_print_debuginfo
 !  the execution is stopped with an error message.
 !------------------------------------------------------------------------------
 SUBROUTINE fs_register_field(serializer, fieldname, data_type, bytes_per_element, &
-                          isize, jsize, ksize, lsize, &
+                          rank, isize, jsize, ksize, lsize, &
                           iminushalo, iplushalo, jminushalo, jplushalo, &
                           kminushalo, kplushalo, lminushalo, lplushalo)
 
   TYPE(t_serializer), INTENT(IN) :: serializer
   CHARACTER(LEN=*)               :: fieldname, data_type
-  INTEGER, INTENT(IN)            :: bytes_per_element, isize, jsize, ksize, lsize, &
+  INTEGER, INTENT(IN)            :: bytes_per_element, rank, isize, jsize, ksize, lsize, &
                                     iminushalo, iplushalo, jminushalo, jplushalo, &
                                     kminushalo, kplushalo, lminushalo, lplushalo
 
   ! External function
   INTERFACE
      SUBROUTINE fs_register_field_(serializer, fieldname, fieldname_length, &
-                                  datatype, datatype_length, bytes_per_element, &
-                                  isize, jsize, ksize, lsize, &
+                                  datatype, datatype_length, &
+                                  bytes_per_element, rank, isize, jsize, ksize, lsize, &
                                   iminushalo, iplushalo, jminushalo, jplushalo, &
                                   kminushalo, kplushalo, lminushalo, lplushalo) &
           BIND(c, name='fs_register_field')
@@ -571,7 +571,7 @@ SUBROUTINE fs_register_field(serializer, fieldname, data_type, bytes_per_element
        TYPE(C_PTR), VALUE                    :: serializer
        CHARACTER(KIND=C_CHAR), DIMENSION(*)  :: fieldname, datatype
        INTEGER(C_INT), VALUE                 :: fieldname_length, datatype_length, &
-                                                bytes_per_element, isize, jsize, ksize, lsize, &
+                                                bytes_per_element, rank, isize, jsize, ksize, lsize, &
                                                 iminushalo, iplushalo, jminushalo, jplushalo, &
                                                 kminushalo, kplushalo, lminushalo, lplushalo
      END SUBROUTINE fs_register_field_
@@ -579,7 +579,7 @@ SUBROUTINE fs_register_field(serializer, fieldname, data_type, bytes_per_element
 
   CALL fs_register_field_(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          TRIM(data_type), LEN_TRIM(data_type), &
-                         bytes_per_element, isize, jsize, ksize, lsize, &
+                         bytes_per_element, rank, isize, jsize, ksize, lsize, &
                          iminushalo, iplushalo, jminushalo, jplushalo, &
                          kminushalo, kplushalo, lminushalo, lplushalo)
 
@@ -808,10 +808,10 @@ END FUNCTION fs_get_field_bounds
 !  If the field is not registered and the serializer is open in write or
 !  append mode, the field is automatically registered with the given sizes.
 !------------------------------------------------------------------------------
-SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, isize, jsize, ksize, lsize, lbounds, ubounds)
+SUBROUTINE fs_check_size(serializer, fieldname, data_type, rank, bytes_per_element, isize, jsize, ksize, lsize, lbounds, ubounds)
   TYPE(t_serializer) :: serializer
   CHARACTER(LEN=*)   :: fieldname, data_type
-  INTEGER            :: bytes_per_element, isize, jsize, ksize, lsize
+  INTEGER            :: rank, bytes_per_element, isize, jsize, ksize, lsize
 
   ! Christian, 04.07.2017
   ! Attention - This is for a hack missusing the halo field for storing index bounds
@@ -821,12 +821,12 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, is
 
   ! External functions
   INTERFACE
-     SUBROUTINE check_size(serializer, name, name_length, isize, jsize, ksize, lsize) &
+     SUBROUTINE check_size(serializer, name, name_length, rank, isize, jsize, ksize, lsize) &
           BIND(c, name='fs_check_size')
        USE, INTRINSIC :: iso_c_binding
        TYPE(C_PTR), VALUE                    :: serializer
        CHARACTER(KIND=C_CHAR), DIMENSION(*)  :: name
-       INTEGER(C_INT), VALUE                 :: name_length
+       INTEGER(C_INT), VALUE                 :: name_length, rank
        INTEGER(C_INT), INTENT(OUT)           :: isize, jsize, ksize, lsize
      END SUBROUTINE check_size
 
@@ -847,7 +847,7 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, is
   IF (fs_field_exists(serializer, fieldname)) THEN
     ! Check size
     CALL check_size(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
-                           isize, jsize, ksize, lsize)
+                           rank, isize, jsize, ksize, lsize)
 
     ! Check element size
     element_size = fs_get_element_size(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname))
@@ -867,8 +867,8 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, bytes_per_element, is
       ub4d(1:SIZE(ubounds)) = ubounds
     END IF
 
-    CALL fs_register_field(serializer, fieldname, data_type, bytes_per_element, &
-                        isize, jsize, ksize, lsize, lb4d(1), ub4d(1), lb4d(2), ub4d(2), lb4d(3), ub4d(3), lb4d(4), ub4d(4))
+    CALL fs_register_field(serializer, fieldname, data_type, bytes_per_element, rank, isize, jsize, ksize, lsize, &
+                           lb4d(1), ub4d(1), lb4d(2), ub4d(2), lb4d(3), ub4d(3), lb4d(4), ub4d(4))
   ELSE
     WRITE(*,*) "Error: field ", fieldname, " does not exist in the serializer"
     WRITE(*,*) "Aborting"
@@ -1054,10 +1054,13 @@ SUBROUTINE fs_register_derived_type_field(serializer, fieldname, data_type, lbou
   ! TODO Bounds mit Size abgleichen
   INTEGER, DIMENSION(:), INTENT(in), OPTIONAL :: lbounds, ubounds
   INTEGER, DIMENSION(4) :: sizes, lb4d, ub4d
+  INTEGER :: rank
 
   IF(.NOT. fs_field_exists(serializer, fieldname) .AND. fs_serializer_openmode(serializer) /= 'r') THEN
+    rank = 0
     lb4d = (/ 1, 1, 1, 1 /)
     IF (PRESENT(lbounds)) THEN
+      rank = SIZE(lbounds)
       lb4d(1:SIZE(lbounds)) = lbounds
     END IF
     ub4d = (/ 1, 1, 1, 1 /)
@@ -1066,7 +1069,7 @@ SUBROUTINE fs_register_derived_type_field(serializer, fieldname, data_type, lbou
     END IF
     sizes = ABS(ub4d - lb4d) + 1
 
-    CALL fs_register_field(serializer, fieldname, data_type, 0, sizes(1), sizes(2), sizes(3), sizes(4), &
+    CALL fs_register_field(serializer, fieldname, data_type, 0, rank, sizes(1), sizes(2), sizes(3), sizes(4), &
                            lb4d(1), ub4d(1), lb4d(2), ub4d(2), lb4d(3), ub4d(3), lb4d(4), ub4d(4))
   END IF
 
@@ -1089,7 +1092,7 @@ SUBROUTINE fs_write_int_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (ASSOCIATED(padd)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "int", 0, fs_intsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -1116,7 +1119,7 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "int", 1, fs_intsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -1147,7 +1150,7 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "int", 2, fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -1179,7 +1182,7 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
+    CALL fs_check_size(serializer, fieldname, "int", 3, fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1211,7 +1214,7 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "int", 4, fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1353,7 +1356,7 @@ SUBROUTINE fs_write_float_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (ASSOCIATED(padd)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "float", 0, fs_floatsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -1380,7 +1383,7 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "float", 1, fs_floatsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -1411,7 +1414,7 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "float", 2, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -1442,7 +1445,7 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
+    CALL fs_check_size(serializer, fieldname, "float", 3, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1474,7 +1477,7 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "float", 4, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                        SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1507,7 +1510,7 @@ SUBROUTINE fs_write_double_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (ASSOCIATED(padd)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "double", 0, fs_doublesize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                            C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -1534,7 +1537,7 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "double", 1, fs_doublesize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -1567,7 +1570,7 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0 .AND. .NOT. (SIZE(field) == 1 .AND. ANY(SHAPE(field) > 1))) THEN
 
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
+    CALL fs_check_size(serializer, fieldname, "double", 2, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -1598,7 +1601,7 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
+    CALL fs_check_size(serializer, fieldname, "double", 3, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1630,7 +1633,7 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
   padd=>field
 
   IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "double", 4, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
                                                                          SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1690,7 +1693,7 @@ SUBROUTINE fs_read_int_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "int", 0, fs_intsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -1716,7 +1719,7 @@ SUBROUTINE fs_read_int_1d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "int", 1, fs_intsize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -1746,7 +1749,7 @@ SUBROUTINE fs_read_int_2d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
+    CALL fs_check_size(serializer, fieldname, "int", 2, fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -1776,7 +1779,7 @@ SUBROUTINE fs_read_int_3d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
+    CALL fs_check_size(serializer, fieldname, "int", 3, fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1, 1)), &
@@ -1805,7 +1808,7 @@ SUBROUTINE fs_read_int_4d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "int", fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "int", 4, fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4))
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1928,7 +1931,7 @@ SUBROUTINE fs_read_float_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "float", 0, fs_floatsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -1954,7 +1957,7 @@ SUBROUTINE fs_read_float_1d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "float", 1, fs_floatsize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -1984,7 +1987,7 @@ SUBROUTINE fs_read_float_2d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
+    CALL fs_check_size(serializer, fieldname, "float", 2, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -2014,7 +2017,7 @@ SUBROUTINE fs_read_float_3d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
+    CALL fs_check_size(serializer, fieldname, "float", 3, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1, 1)), &
@@ -2043,7 +2046,7 @@ SUBROUTINE fs_read_float_4d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "float", fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "float", 4, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                        SIZE(field, 3), SIZE(field, 4))
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -2076,7 +2079,7 @@ SUBROUTINE fs_read_double_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "double", 0, fs_doublesize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
@@ -2102,7 +2105,7 @@ SUBROUTINE fs_read_double_1d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "double", 1, fs_doublesize(), SIZE(field, 1), 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), &
@@ -2132,7 +2135,7 @@ SUBROUTINE fs_read_double_2d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
+    CALL fs_check_size(serializer, fieldname, "double", 2, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1)), &
@@ -2162,7 +2165,7 @@ SUBROUTINE fs_read_double_3d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
+    CALL fs_check_size(serializer, fieldname, "double", 3, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1, 1, 1)), &
@@ -2191,7 +2194,7 @@ SUBROUTINE fs_read_double_4d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "double", fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
+    CALL fs_check_size(serializer, fieldname, "double", 4, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
                                                                          SIZE(field, 3), SIZE(field, 4))
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &

@@ -55,7 +55,7 @@ Serializer::~Serializer()
 }
 
 bool Serializer::RegisterField(const std::string& name, std::string type, int bytesPerElement,
-            int iSize, int jSize, int kSize, int lSize,
+            int rank, int iSize, int jSize, int kSize, int lSize,
             int iMinusHalo, int iPlusHalo, int jMinusHalo, int jPlusHalo,
             int kMinusHalo, int kPlusHalo, int lMinusHalo, int lPlusHalo
         )
@@ -71,10 +71,6 @@ bool Serializer::RegisterField(const std::string& name, std::string type, int by
         exception.Init(errorstr.str());
         throw exception;
     }
-
-    // Compute rank
-    int rank = (iSize != 1 ? 1: 0) + (jSize != 1 ? 1: 0)
-             + (kSize != 1 ? 1: 0) + (lSize != 1 ? 1: 0);
 
     // Create info object
     DataFieldInfo info;
