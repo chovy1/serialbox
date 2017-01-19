@@ -1568,7 +1568,7 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
   padd=>field
 
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0 .AND. .NOT. (SIZE(field) == 1 .AND. ANY(SHAPE(field) > 1))) THEN
+  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
 
     CALL fs_check_size(serializer, fieldname, "double", 2, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
