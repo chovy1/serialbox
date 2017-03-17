@@ -35,6 +35,11 @@ namespace ser {
         virtual std::string FormatName() const =0;
 
         /**
+		 * Checks if the table file exists and contains something. This is used in read mode.
+		 */
+        virtual void CheckTables() =0;
+
+        /**
         * Imports and fills the tables at beginning. This is used in read mode
         */
         virtual void ImportTables() =0;

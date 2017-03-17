@@ -37,6 +37,7 @@ void Serializer::Init(const std::string& directory, const std::string& prefix, S
     }
     else
     {
+        pFileFormat_->CheckTables();
         pFileFormat_->ImportTables();
     }
 
@@ -149,12 +150,11 @@ std::vector<std::string> Serializer::FieldsAtSavepoint(const Savepoint& savepoin
 void Serializer::WriteField(const std::string& fieldName, const Savepoint& savepoint,
         const void* pData, int iStride, int jStride, int kStride, int lStride)
 {
-    // Don't write if serialization is disabeld
-    if (enabled_ < 0) return;
-
-
     // *** DEBUG ***
-    //std::ostream& sout = std::cout;
+    // std::ostream& sout = std::cout;
+
+	// Don't write if serialization is disabeld
+    if (enabled_ < 0) return;
 
     sout << "Writing field " << fieldName << " at savepoint " << savepoint.ToString()
          << " with data at " << pData << "\n";
@@ -226,6 +226,9 @@ void Serializer::WriteField(const std::string& fieldName, const Savepoint& savep
 void Serializer::ReadField(const std::string& fieldName, const Savepoint& savepoint,
         void* pData, int iStride, int jStride, int kStride, int lStride, bool alsoPrevious) const
 {
+	// *** DEBUG ***
+	// std::ostream& sout = std::cout;
+
     // Don't read if serialization is disabeld
     if (enabled_ < 0) return;
 

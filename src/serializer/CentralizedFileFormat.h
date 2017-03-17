@@ -36,6 +36,8 @@ namespace ser {
 
         virtual std::string FormatName() const;
 
+        virtual void CheckTables();
+
         virtual void ImportTables();
 
         virtual void WriteTables(const std::string& fieldName);
