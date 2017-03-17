@@ -78,11 +78,11 @@ include_directories(${Boost_INCLUDE_DIR})
 # Build sources
 add_subdirectory( libs/libjson )
 add_subdirectory( libs/sha256 )
-#add_subdirectory( libs/gmock-gtest )
+add_subdirectory( libs/gmock-gtest )
 add_subdirectory( src )
 add_subdirectory( fortran )
 add_subdirectory( tools )
-#add_subdirectory( unittest )
+add_subdirectory( unittest )
 add_subdirectory( python )
 
 file(APPEND ${TEST_SCRIPT} "echo \"RETURNING $res\" \n exit $res\n")
