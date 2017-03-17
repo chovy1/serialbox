@@ -44,7 +44,7 @@ extern "C"
     // Management of fields
     void fs_register_field(void* serializer, const char* name, int name_length,
                            const char* data_type, int data_type_length, int bytes_per_element,
-                           int isize, int jsize, int ksize, int lsize,
+                           int rank, int isize, int jsize, int ksize, int lsize,
                            int iminushalo, int iplushalo, int jminushalo, int jplushalo,
                            int kminushalo, int kplushalo, int lminushalo, int lplushalo);
     int fs_field_exists(void* serializer, const char* name, int name_length);
@@ -90,7 +90,7 @@ extern "C"
     void fs_enable_serialization();
     void fs_disable_serialization();
     void fs_print_debuginfo(void* serializer);
-    void fs_check_size(void* serializer, const char* fieldname, int namelength, int* isize, int* jsize, int* ksize, int* lsize);
+    void fs_check_size(void* serializer, const char* fieldname, int namelength, int rank, int* isize, int* jsize, int* ksize, int* lsize);
     void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
                             const void* base_ptr, const void* iplus1, const void* jplus1, const void* kplus1, const void* lplus1,
                             int* istride, int* jstride, int* kstride, int* lstride);

@@ -27,6 +27,28 @@ std::string CentralizedFileFormat::FormatName() const
     return "centralized";
 }
 
+void CentralizedFileFormat::CheckTables()
+{
+    // Open database file and get length
+    std::ifstream fs(databaseFile_.c_str());
+    fs.seekg(0, std::ios::end);
+    int fileLength = fs.tellg();
+
+	if (!fs.good())
+	{
+		std::cerr << "Error: JSON file not found: " << databaseFile_ << "\n";
+        fs.close();
+		std::exit(1);
+	}
+
+    if (fileLength <= 0)
+    {
+		std::cerr << "Error: JSON file empty: " << databaseFile_ << "\n";
+        fs.close();
+		std::exit(1);
+    }
+}
+
 void CentralizedFileFormat::ImportTables()
 {
     // Open database file and get length

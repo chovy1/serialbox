@@ -32,9 +32,14 @@ void Serializer::Init(const std::string& directory, const std::string& prefix, S
 
     // Clean the tables if mode is write
     if (mode_ == SerializerOpenModeWrite)
+    {
         pFileFormat_->CleanTables();
+    }
     else
+    {
+        pFileFormat_->CheckTables();
         pFileFormat_->ImportTables();
+    }
 
     // Initiaize binary serializer
     binarySerializer_.Init();
@@ -51,7 +56,7 @@ Serializer::~Serializer()
 }
 
 bool Serializer::RegisterField(const std::string& name, std::string type, int bytesPerElement,
-            int iSize, int jSize, int kSize, int lSize,
+            int rank, int iSize, int jSize, int kSize, int lSize,
             int iMinusHalo, int iPlusHalo, int jMinusHalo, int jPlusHalo,
             int kMinusHalo, int kPlusHalo, int lMinusHalo, int lPlusHalo
         )
@@ -67,10 +72,6 @@ bool Serializer::RegisterField(const std::string& name, std::string type, int by
         exception.Init(errorstr.str());
         throw exception;
     }
-
-    // Compute rank
-    int rank = (iSize != 1 ? 1: 0) + (jSize != 1 ? 1: 0)
-             + (kSize != 1 ? 1: 0) + (lSize != 1 ? 1: 0);
 
     // Create info object
     DataFieldInfo info;
@@ -119,6 +120,14 @@ bool Serializer::RegisterField(const std::string& name, std::string type, int by
     return false;
 }
 
+/**
+* @return True is returned iff the field is registered
+*/
+bool Serializer::HasField(const std::string& fieldname) const
+{
+	return fieldsTable_.HasField(fieldname);
+}
+
 const DataFieldInfo& Serializer::FindField(const std::string& fieldname) const
 {
     return fieldsTable_.Find(fieldname);
@@ -141,7 +150,10 @@ std::vector<std::string> Serializer::FieldsAtSavepoint(const Savepoint& savepoin
 void Serializer::WriteField(const std::string& fieldName, const Savepoint& savepoint,
         const void* pData, int iStride, int jStride, int kStride, int lStride)
 {
-    // Don't write if serialization is disabeld
+    // *** DEBUG ***
+    // std::ostream& sout = std::cout;
+
+	// Don't write if serialization is disabeld
     if (enabled_ < 0) return;
 
     sout << "Writing field " << fieldName << " at savepoint " << savepoint.ToString()
@@ -214,6 +226,9 @@ void Serializer::WriteField(const std::string& fieldName, const Savepoint& savep
 void Serializer::ReadField(const std::string& fieldName, const Savepoint& savepoint,
         void* pData, int iStride, int jStride, int kStride, int lStride, bool alsoPrevious) const
 {
+	// *** DEBUG ***
+	// std::ostream& sout = std::cout;
+
     // Don't read if serialization is disabeld
     if (enabled_ < 0) return;
 
