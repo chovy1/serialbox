@@ -1,6 +1,6 @@
-/.cproject
-/.project
-/install
-.gitignore.bak
+.cproject
+.project
+.settings
+install
 Debug
 build
