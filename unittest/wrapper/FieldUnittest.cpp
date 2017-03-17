@@ -33,12 +33,12 @@ TEST_F(FieldUnittest, Register)
     ASSERT_EQ(0, fs_fields(&ser));
 
     // Register some fields with the C++ API
-    ser.RegisterField("field1", "int"   , 4, 42,  1,  1, 12, 1, 1, 0, 0, 0, 0, 2, 2);
-    ser.RegisterField("field2", "double", 8, 42, 28, 80,  1, 3, 3, 3, 3, 0, 1, 0, 0);
+    ser.RegisterField("field1", "int"   , 4, 2, 42,  1,  1, 12, 1, 1, 0, 0, 0, 0, 2, 2);
+    ser.RegisterField("field2", "double", 8, 3, 42, 28, 80,  1, 3, 3, 3, 3, 0, 1, 0, 0);
 
     // Register some fields with the C API
-    fs_register_field(&ser, "field3", 6, "int"   , 3, 4, 42,  1, 80,  1, 3, 3, 0, 0, 0, 1, 0, 0);
-    fs_register_field(&ser, "field4", 6, "double", 6, 8,  1, 28, 80, 12, 0, 0, 2, 2, 0, 0, 1, 1);
+    fs_register_field(&ser, "field3", 6, "int"   , 3, 2, 4, 42,  1, 80,  1, 3, 3, 0, 0, 0, 1, 0, 0);
+    fs_register_field(&ser, "field4", 6, "double", 6, 3, 8,  1, 28, 80, 12, 0, 0, 2, 2, 0, 0, 1, 1);
 
     // Check that fields exist
     ASSERT_TRUE(fs_field_exists(&ser, "field1", 6));
@@ -202,8 +202,8 @@ TEST_F(FieldUnittest, Register)
 
 TEST_F(FieldUnittest, FieldMetainfo)
 {
-    fs_register_field(&ser, "field1", 6, "int"   , 3, 4, 42,  1, 80,  1, 3, 3, 0, 0, 0, 1, 0, 0);
-    fs_register_field(&ser, "field2", 6, "float", 5, 4,  1, 28, 80, 12, 0, 0, 2, 2, 0, 0, 1, 1);
+    fs_register_field(&ser, "field1", 6, "int"   , 3, 2, 4, 42,  1, 80,  1, 3, 3, 0, 0, 0, 1, 0, 0);
+    fs_register_field(&ser, "field2", 6, "float", 5, 3, 4,  1, 28, 80, 12, 0, 0, 2, 2, 0, 0, 1, 1);
 
     // Add some metainfo
     fs_add_field_metainfo_b(&ser, "field1", 6, "FirstField", 10, true);

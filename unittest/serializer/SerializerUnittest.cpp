@@ -51,10 +51,10 @@ TEST_F(SerializerUnittest, Write)
                 }
 
     // Register various versions of this field
-    serializer.RegisterField("ik"  , "double", 8, isize,     1, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer.RegisterField("jk"  , "float" , 4,     1, jsize, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer.RegisterField("ikl" , "double", 8, isize,     1, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer.RegisterField("ijkl", "float" , 4, isize, jsize, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer.RegisterField("ik"  , "double", 8, 2, isize,     1, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer.RegisterField("jk"  , "float" , 4, 2,     1, jsize, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer.RegisterField("ikl" , "double", 8, 3, isize,     1, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer.RegisterField("ijkl", "float" , 4, 4, isize, jsize, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
 
     // Setting a savepoint and serializing all fields
     Savepoint sp;
@@ -289,10 +289,10 @@ TEST_F(SerializerUnittest, Read)
                 }
 
     // Register various versions of this field
-    serializer_write.RegisterField("ik"  , "double", 8, isize,     1, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer_write.RegisterField("jk"  , "double", 8,     1, jsize, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer_write.RegisterField("ikl" , "double", 8, isize,     1, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
-    serializer_write.RegisterField("ijkl", "double", 8, isize, jsize, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer_write.RegisterField("ik"  , "double", 8, 2, isize,     1, ksize,    1, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer_write.RegisterField("jk"  , "double", 8, 2,    1, jsize, ksize,     1, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer_write.RegisterField("ikl" , "double", 8, 3, isize,     1, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
+    serializer_write.RegisterField("ijkl", "double", 8, 4, isize, jsize, ksize, lsize, 0, 0, 0, 0, 0, 0, 0, 0);
 
     // Setting a savepoint and serializing all fields
     Savepoint sp;

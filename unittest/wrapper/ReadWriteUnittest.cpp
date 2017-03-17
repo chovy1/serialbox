@@ -53,12 +53,12 @@ protected:
         sp.Init("TestSavepoint");
 
         // Register fields
-        ser.RegisterField("int3", "int", intSize, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        ser.RegisterField("int2", "int", intSize, iSize, 1, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        ser.RegisterField("double3", "double", doubleSize, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        ser.RegisterField("double1", "double", doubleSize, 1, jSize, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        ser.RegisterField("float3", "float", floatSize, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
-        ser.RegisterField("float1", "float", floatSize, 1, jSize, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("int3", "int", intSize, 3, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("int2", "int", intSize, 2, iSize, 1, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("double3", "double", 3, doubleSize, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("double1", "double", 1, doubleSize, 1, jSize, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("float3", "float", 3, floatSize, iSize, jSize, kSize, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        ser.RegisterField("float1", "float", 1, floatSize, 1, jSize, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0);
 
         FillFields();
     }
