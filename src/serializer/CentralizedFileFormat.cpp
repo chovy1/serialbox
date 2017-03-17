@@ -65,7 +65,6 @@ void CentralizedFileFormat::ImportTables()
         pGlobalMetainfo_->Cleanup();
         pFieldsTable_->Cleanup();
         pOffsetTable_->Cleanup();
-
         return;
     }
 
