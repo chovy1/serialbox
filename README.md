@@ -1,3 +1,5 @@
+This is a fork of https://github.com/C2SM-RCM/serialbox including some changes.
+
 # serialbox
 
 <img src="doc/logo.png" width="200" height="150" />
@@ -29,16 +31,3 @@ As an example, porting scientific codes to graphical processing units, that requ
 simply ```mkdir build; cd build; cmake ../; make [install]```
 
 for building the documentation ```make doc```
-
-## CSCS Environment
-
-On daint, greina, kesch and lema a Serialbox installation is provided by jenkins (daily checkout of MeteoSwiss-APN master). If you want to compile and install Serialbox manually you can do so using the build environment.
-
-Go to your checkout of Serialbox, then execute:
-
-    git clone git@github.com:C2SM-RCM/buildenv.git
-    ./buildenv/package_builder/build_apkg.sh -p serialbox -d . --local -c $COMPILER
-
-This will build and install serialbox into the `./install` folder with the compiler `$COMPILER` (usually gnu or cray). If the `-c $COMPILER` option is omitted the script will build against all available targets. 
-
-Refer to the script for further configuration options.
