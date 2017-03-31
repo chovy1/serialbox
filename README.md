@@ -1,6 +1,6 @@
 This is a fork of https://github.com/C2SM-RCM/serialbox including some changes.
 
-It was created and modified to support the FortranTestGenerator: https://github.com/fortesg/fortrantestgenerator.
+It was created and modified to support the `FortranTestGenerator`: https://github.com/fortesg/fortrantestgenerator.
 
 # serialbox
 
