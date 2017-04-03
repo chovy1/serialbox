@@ -10,6 +10,7 @@ extern "C"
                                char openmode);
     void fs_destroy_serializer(void* serializer);
     char fs_serializer_openmode(void* serializer);
+    void fs_serializer_prefix(void* serializer, char* value);
     int  fs_serializer_metainfo_size(void* savepoint);
     void fs_serializer_metainfo_key_lengths(void* savepoint, int* lengths);
     void fs_serializer_metainfo_get_keys(void* savepoint, char** lengths);
