@@ -104,6 +104,7 @@ void DataFieldInfo::FromJSON(const JSONNode& node)
     lMinusHalo_ = 0;
     iPlusHalo_ = 0;
     jPlusHalo_ = 0;
+    kPlusHalo_ = 0;
     lPlusHalo_ = 0;
 
     metainfo_.Cleanup();
@@ -137,7 +138,6 @@ void DataFieldInfo::FromJSON(const JSONNode& node)
         {
             metainfo_.AddNode(*iter);
         }
-
     }
 }
 
