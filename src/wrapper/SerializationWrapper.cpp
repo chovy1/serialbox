@@ -495,8 +495,6 @@ void fs_check_size(void* serializer, const char* fieldname, int namelength, int 
     int ref_sizes[4] = { info.iSize(), info.jSize(), info.kSize(), info.lSize() };
 
     // Check rank
-    int ref_rank = (ref_sizes[0] != 1 ? 1 : 0) + (ref_sizes[1] != 1 ? 1 : 0) + (ref_sizes[2] != 1 ? 1 : 0) + (ref_sizes[3] != 1 ? 1 : 0);
-
     if (rank != info.rank())
     {
         std::cout << "Error: field " << fieldname_str << " passed with rank " << rank
