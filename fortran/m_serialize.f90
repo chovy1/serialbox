@@ -385,7 +385,6 @@ FUNCTION fs_serializer_openmode(serializer)
 
 END FUNCTION fs_serializer_openmode
 
-! TODO Implement correctly
 !==============================================================================
 !+ Module procedure that returns the prefix of the given serializer.
 !------------------------------------------------------------------------------
@@ -813,8 +812,6 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, rank, bytes_per_eleme
   CHARACTER(LEN=*)   :: fieldname, data_type
   INTEGER            :: rank, bytes_per_element, isize, jsize, ksize, lsize
 
-  ! Christian, 04.07.2017
-  ! Attention - This is for a hack missusing the halo field for storing index bounds
   ! TODO Bounds mit Size abgleichen
   INTEGER, DIMENSION(:), INTENT(in), OPTIONAL :: lbounds, ubounds
   INTEGER, DIMENSION(4) :: lb4d, ub4d
