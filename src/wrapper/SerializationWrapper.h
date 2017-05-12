@@ -92,7 +92,7 @@ extern "C"
     void fs_disable_serialization();
     void fs_print_debuginfo(void* serializer);
     void fs_check_size(void* serializer, const char* fieldname, int namelength, int rank, int* isize, int* jsize, int* ksize, int* lsize);
-    void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
+    void fs_compute_strides(void* serializer, const char* fieldname, int namelength, int rank,
                             const void* base_ptr, const void* iplus1, const void* jplus1, const void* kplus1, const void* lplus1,
                             int* istride, int* jstride, int* kstride, int* lstride);
     int fs_field_exists_at_savepoint(void* serializer, void* savepoint, const char* fieldname, int fieldname_length);
