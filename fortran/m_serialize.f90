@@ -2312,7 +2312,7 @@ END SUBROUTINE fs_allocate_pointer_int_4d
 SUBROUTINE fs_allocate_pointer_logical_1d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:)
+  LOGICAL, INTENT(OUT), POINTER :: field(:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2329,7 +2329,7 @@ END SUBROUTINE fs_allocate_pointer_logical_1d
 SUBROUTINE fs_allocate_pointer_logical_2d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:)
+  LOGICAL, INTENT(OUT), POINTER :: field(:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2346,7 +2346,7 @@ END SUBROUTINE fs_allocate_pointer_logical_2d
 SUBROUTINE fs_allocate_pointer_logical_3d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:)
+  LOGICAL, INTENT(OUT), POINTER :: field(:,:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2363,7 +2363,7 @@ END SUBROUTINE fs_allocate_pointer_logical_3d
 SUBROUTINE fs_allocate_pointer_logical_4d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), POINTER :: field(:,:,:,:)
+  LOGICAL, INTENT(OUT), POINTER :: field(:,:,:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2603,7 +2603,7 @@ END SUBROUTINE fs_allocate_allocatable_int_4d
 SUBROUTINE fs_allocate_allocatable_logical_1d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:)
+  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2618,7 +2618,7 @@ END SUBROUTINE fs_allocate_allocatable_logical_1d
 SUBROUTINE fs_allocate_allocatable_logical_2d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:)
+  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2633,7 +2633,7 @@ END SUBROUTINE fs_allocate_allocatable_logical_2d
 SUBROUTINE fs_allocate_allocatable_logical_3d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
@@ -2648,7 +2648,7 @@ END SUBROUTINE fs_allocate_allocatable_logical_3d
 SUBROUTINE fs_allocate_allocatable_logical_4d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
-  LOGICAL(KIND=C_INT), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
 
   INTEGER, DIMENSION(4,2) :: bounds
 
