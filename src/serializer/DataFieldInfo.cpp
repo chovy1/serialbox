@@ -61,7 +61,7 @@ JSONNode DataFieldInfo::ToJSON(int id) const
     fieldNode.push_back(JSONNode("__isize", iSize_));
     fieldNode.push_back(JSONNode("__jsize", jSize_));
     fieldNode.push_back(JSONNode("__ksize", kSize_));
-    if (lSize_ != 1) fieldNode.push_back(JSONNode("__lsize", lSize_));
+    fieldNode.push_back(JSONNode("__lsize", lSize_));
 
     // Halo
     fieldNode.push_back(JSONNode("__iminushalosize", iMinusHalo_));
@@ -70,11 +70,8 @@ JSONNode DataFieldInfo::ToJSON(int id) const
     fieldNode.push_back(JSONNode("__jplushalosize", jPlusHalo_));
     fieldNode.push_back(JSONNode("__kminushalosize", kMinusHalo_));
     fieldNode.push_back(JSONNode("__kplushalosize", kPlusHalo_));
-    if (lSize_ != 1)
-    {
-        fieldNode.push_back(JSONNode("__lminushalosize", lMinusHalo_));
-        fieldNode.push_back(JSONNode("__lplushalosize", lPlusHalo_));
-    }
+    fieldNode.push_back(JSONNode("__lminushalosize", lMinusHalo_));
+    fieldNode.push_back(JSONNode("__lplushalosize", lPlusHalo_));
 
     // Encode the metadata associated with the field
     std::vector<JSONNode> metainfo = metainfo_.GenerateNodes();
