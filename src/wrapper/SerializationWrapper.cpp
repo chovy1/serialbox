@@ -528,14 +528,13 @@ void fs_check_size(void* serializer, const char* fieldname, int namelength, int 
     }
 }
 
-void fs_compute_strides(void* serializer, const char* fieldname, int namelength, int rank,
+void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
                         const void* base_ptr, const void* iplus1, const void* jplus1, const void* kplus1, const void* lplus1,
                         int* istride, int* jstride, int* kstride, int* lstride)
 {
     const Serializer& ser = *reinterpret_cast<const Serializer*>(serializer);
     const DataFieldInfo& info = ser.FindField(std::string(fieldname, namelength));
 
-    // Check rank
     long strides[4] = {
             reinterpret_cast<const char*>(iplus1) - reinterpret_cast<const char*>(base_ptr),
             reinterpret_cast<const char*>(jplus1) - reinterpret_cast<const char*>(base_ptr),
@@ -543,12 +542,6 @@ void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
             reinterpret_cast<const char*>(lplus1) - reinterpret_cast<const char*>(base_ptr)
         };
     const bool storage[4] = { info.iSize() > 1, info.jSize() > 1, info.kSize() > 1, info.lSize() > 1 };
-    if (rank != info.rank())
-    {
-        std::cout << "Error: field " << std::string(fieldname, namelength) << " has rank " << info.rank()
-            << ", but field with rank " << rank << " was passed\n";
-        std::exit(1);
-    }
 
     // Reorder strides
     for (int i = 0; i < 3; ++i)
