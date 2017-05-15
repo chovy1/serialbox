@@ -1190,8 +1190,6 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
                          C_LOC(padd(1, 1, 1)), &
                          istride, jstride, kstride, lstride)
 
-    WRITE (*,*) '*** STRIDES (', TRIM(fieldname), '): ', istride, jstride, kstride, lstride, ' ***'
-
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
