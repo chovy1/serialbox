@@ -543,8 +543,6 @@ void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
             reinterpret_cast<const char*>(lplus1) - reinterpret_cast<const char*>(base_ptr)
         };
     const bool storage[4] = { info.iSize() > 1, info.jSize() > 1, info.kSize() > 1, info.lSize() > 1 };
-    //const int rank       = (strides[0] > 0 ? 1 : 0) + (strides[1] > 0 ? 1 : 0) + (strides[2] > 0 ? 1 : 0) + (strides[3] > 0 ? 1 : 0);
-    //const int shouldrank = (storage[0] ? 1 : 0) + (storage[1] ? 1 : 0) + (storage[2] ? 1 : 0) + (storage[3] ? 1 : 0);
     if (rank != info.rank())
     {
         std::cout << "Error: field " << std::string(fieldname, namelength) << " has rank " << info.rank()
@@ -553,14 +551,11 @@ void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
     }
 
     // Reorder strides
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         if (!storage[i])
         {
-            // Shift strides to the left and set the current one to 0
-            for (int j = 3; j > i; --j)
-                strides[j] = strides[j-1];
-            strides[i] = 0;
+        	strides[i] = strides[i+1];
         }
     }
 
