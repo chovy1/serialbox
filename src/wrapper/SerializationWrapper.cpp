@@ -544,13 +544,13 @@ void fs_compute_strides(void* serializer, const char* fieldname, int namelength,
     const bool storage[4] = { info.iSize() > 1, info.jSize() > 1, info.kSize() > 1, info.lSize() > 1 };
 
     // Reorder strides
-    for (int i = 0; i < 3; ++i)
-    {
-        if (!storage[i])
-        {
-        	strides[i] = strides[i+1];
-        }
-    }
+    for (int i = 2; i >= 0; --i)
+	{
+		if (strides[i] == 0)
+		{
+			strides[i] = strides[i+1];
+		}
+	}
 
     *istride = strides[0];
     *jstride = strides[1];
