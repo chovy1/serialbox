@@ -234,6 +234,10 @@ PRIVATE
       fs_allocate_pointer_int_2d, &
       fs_allocate_pointer_int_3d, &
       fs_allocate_pointer_int_4d, &
+      fs_allocate_pointer_long_1d, &
+      fs_allocate_pointer_long_2d, &
+      fs_allocate_pointer_long_3d, &
+      fs_allocate_pointer_long_4d, &
       fs_allocate_pointer_logical_1d, &
       fs_allocate_pointer_logical_2d, &
       fs_allocate_pointer_logical_3d, &
@@ -259,6 +263,10 @@ PRIVATE
       fs_allocate_allocatable_int_2d, &
       fs_allocate_allocatable_int_3d, &
       fs_allocate_allocatable_int_4d, &
+      fs_allocate_allocatable_long_1d, &
+      fs_allocate_allocatable_long_2d, &
+      fs_allocate_allocatable_long_3d, &
+      fs_allocate_allocatable_long_4d, &
       fs_allocate_allocatable_logical_1d, &
       fs_allocate_allocatable_logical_2d, &
       fs_allocate_allocatable_logical_3d, &
@@ -2630,6 +2638,79 @@ END SUBROUTINE fs_allocate_pointer_int_4d
 !=============================================================================
 !=============================================================================
 
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_pointer_long_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_long_1d
+
+
+SUBROUTINE fs_allocate_pointer_long_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_long_2d
+
+
+SUBROUTINE fs_allocate_pointer_long_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_long_3d
+
+
+SUBROUTINE fs_allocate_pointer_long_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE fs_allocate_pointer_long_4d
+
+!=============================================================================
+!=============================================================================
+
 SUBROUTINE fs_allocate_pointer_logical_1d(serializer, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   CHARACTER(LEN=*)                         :: fieldname
@@ -2917,6 +2998,68 @@ SUBROUTINE fs_allocate_allocatable_int_4d(serializer, fieldname, field)
   END IF
 
 END SUBROUTINE fs_allocate_allocatable_int_4d
+
+!=============================================================================
+!=============================================================================
+
+SUBROUTINE fs_allocate_allocatable_long_1d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_long_1d
+
+
+SUBROUTINE fs_allocate_allocatable_long_2d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_long_2d
+
+
+SUBROUTINE fs_allocate_allocatable_long_3d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_long_3d
+
+
+SUBROUTINE fs_allocate_allocatable_long_4d(serializer, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  CHARACTER(LEN=*)                         :: fieldname
+  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+
+  INTEGER, DIMENSION(4,2) :: bounds
+
+  IF (fs_field_exists(serializer, fieldname)) THEN
+    bounds = fs_get_field_bounds(serializer, fieldname)
+    ALLOCATE(field(bounds(1,1):bounds(1,2), bounds(2,1):bounds(2,2), bounds(3,1):bounds(3,2), bounds(4,1):bounds(4,2)))
+  END IF
+
+END SUBROUTINE fs_allocate_allocatable_long_4d
 
 !=============================================================================
 !=============================================================================
