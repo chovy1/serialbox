@@ -20,7 +20,7 @@ namespace ser {
     /**
     * Objects of this class contain a set of metainformation in
     * form of key = value pair. The keys are strings, while the
-    * values can be integers, booleans, floating point numbers
+    * values can be integers, longs, booleans, floating point numbers
     * (either single or double precision) or strings.
     */
     class MetainfoSet
@@ -65,8 +65,8 @@ namespace ser {
         * This function is a mean to retrieve the types of the metainfo saved in the set.
         * For every metainfo saved, a number is generated. If the number is positive, the
         * corresponding metainfo is a string and the number represents the length of it.
-        * The value -1 corresponds to boolean, -2 to integer, -3 to single precision and
-        * -4 to double precision floating point.
+        * The value -1 corresponds to boolean, -2 to integer, -3 to long, -4 to single precision and
+        * -5 to double precision floating point.
         *
         *  The generated list is ensured to be in the same order as the list returned
         *  by the function keys.
@@ -87,7 +87,7 @@ namespace ser {
 
         /**
         * Add a new key-value pair into the set. The key must not exist yet.
-        * The supported types are int, bool, float,
+        * The supported types are int, long, bool, float,
         * double and std::string; a compile-time error is generated if the
         * given type is not supported.
         *
@@ -102,6 +102,7 @@ namespace ser {
             // Check that type of meta info is supported
             BOOST_STATIC_ASSERT((   boost::is_same<ValueType, int        >::type::value
                                     || boost::is_same<ValueType, bool       >::type::value
+                                    || boost::is_same<ValueType, long      >::type::value
                                     || boost::is_same<ValueType, float      >::type::value
                                     || boost::is_same<ValueType, double     >::type::value
                                     || boost::is_same<ValueType, std::string>::type::value
@@ -218,6 +219,20 @@ namespace ser {
         int AsInt(const std::string& key) const;
 
         /**
+        * Extracts a value in long representation.
+        *
+        * If the type is different than long, the function converts the
+        * value to long.
+        *
+        * @throw SerializationException The key does not exist
+        *
+        * @param key The identification of the metainfo value which is requested
+        *
+        * @return The value of the metainfo is returned as copy
+        */
+        long AsLong(const std::string& key) const;
+
+        /**
         * Extracts a value in single precision floating point representation.
         *
         * If the type is different than float, the function converts the
@@ -243,7 +258,7 @@ namespace ser {
         *
         * @return The value of the metainfo is returned as copy
         */
-        float AsDouble(const std::string& key) const;
+        double AsDouble(const std::string& key) const;
 
         /**
         * Extracts a value in RealType representation, where RealType is

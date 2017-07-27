@@ -118,6 +118,12 @@ void fs_get_serializer_metainfo_i(void* serializer, const char* name, int name_l
     sp.globalMetainfo().ExtractValue(std::string(name, name_length), *value);
 }
 
+void fs_get_serializer_metainfo_l(void* serializer, const char* name, int name_length, long* value)
+{
+    Serializer& sp = *reinterpret_cast<Serializer*>(serializer);
+    sp.globalMetainfo().ExtractValue(std::string(name, name_length), *value);
+}
+
 void fs_get_serializer_metainfo_f(void* serializer, const char* name, int name_length, float* value)
 {
     Serializer& sp = *reinterpret_cast<Serializer*>(serializer);
@@ -144,6 +150,11 @@ void fs_add_serializer_metainfo_b(void* serializer, const char* name, int name_l
 }
 
 void fs_add_serializer_metainfo_i(void* serializer, const char* name, int name_length,    int value)
+{
+    reinterpret_cast<Serializer*>(serializer)->AddMetainfo(std::string(name, name_length), value);
+}
+
+void fs_add_serializer_metainfo_l(void* serializer, const char* name, int name_length,  long value)
 {
     reinterpret_cast<Serializer*>(serializer)->AddMetainfo(std::string(name, name_length), value);
 }
@@ -305,6 +316,11 @@ void fs_add_field_metainfo_i(void* serializer, const char* fieldname, int fieldn
     reinterpret_cast<Serializer*>(serializer)->AddFieldMetainfo(std::string(fieldname, fieldname_length), std::string(name, name_length), value);
 }
 
+void fs_add_field_metainfo_l(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,  long value)
+{
+    reinterpret_cast<Serializer*>(serializer)->AddFieldMetainfo(std::string(fieldname, fieldname_length), std::string(name, name_length), value);
+}
+
 void fs_add_field_metainfo_f(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,  float value)
 {
     reinterpret_cast<Serializer*>(serializer)->AddFieldMetainfo(std::string(fieldname, fieldname_length), std::string(name, name_length), value);
@@ -394,6 +410,12 @@ void fs_add_savepoint_metainfo_i(void* savepoint, const char* name, int name_len
     sp.AddMetainfo(std::string(name, name_length), value);
 }
 
+void fs_add_savepoint_metainfo_l(void* savepoint, const char* name, int name_length,  long value)
+{
+    Savepoint& sp = *reinterpret_cast<Savepoint*>(savepoint);
+    sp.AddMetainfo(std::string(name, name_length), value);
+}
+
 void fs_add_savepoint_metainfo_f(void* savepoint, const char* name, int name_length,  float value)
 {
     Savepoint& sp = *reinterpret_cast<Savepoint*>(savepoint);
@@ -419,6 +441,12 @@ void fs_get_savepoint_metainfo_b(void* savepoint, const char* name, int name_len
 }
 
 void fs_get_savepoint_metainfo_i(void* savepoint, const char* name, int name_length, int* value)
+{
+    Savepoint& sp = *reinterpret_cast<Savepoint*>(savepoint);
+    sp.metainfo().ExtractValue(std::string(name, name_length), *value);
+}
+
+void fs_get_savepoint_metainfo_l(void* savepoint, const char* name, int name_length, long* value)
 {
     Savepoint& sp = *reinterpret_cast<Savepoint*>(savepoint);
     sp.metainfo().ExtractValue(std::string(name, name_length), *value);

@@ -17,11 +17,13 @@ extern "C"
     void fs_serializer_metainfo_get_types(void* savepoint, int* types);
     void fs_get_serializer_metainfo_b(void* serializer, const char* name, int name_length,   bool* value);
     void fs_get_serializer_metainfo_i(void* serializer, const char* name, int name_length,    int* value);
+    void fs_get_serializer_metainfo_l(void* serializer, const char* name, int name_length,  long* value);
     void fs_get_serializer_metainfo_f(void* serializer, const char* name, int name_length,  float* value);
     void fs_get_serializer_metainfo_d(void* serializer, const char* name, int name_length, double* value);
     void fs_get_serializer_metainfo_s(void* serializer, const char* name, int name_length, char* value);
     void fs_add_serializer_metainfo_b(void* serializer, const char* name, int name_length,    bool value);
     void fs_add_serializer_metainfo_i(void* serializer, const char* name, int name_length,     int value);
+    void fs_add_serializer_metainfo_l(void* serializer, const char* name, int name_length,   long value);
     void fs_add_serializer_metainfo_f(void* serializer, const char* name, int name_length,   float value);
     void fs_add_serializer_metainfo_d(void* serializer, const char* name, int name_length,  double value);
     void fs_add_serializer_metainfo_s(void* serializer, const char* name, int name_length, const char* value, int value_length);
@@ -55,6 +57,7 @@ extern "C"
 
     void fs_add_field_metainfo_b(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,    bool value);
     void fs_add_field_metainfo_i(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,     int value);
+    void fs_add_field_metainfo_l(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,   long value);
     void fs_add_field_metainfo_f(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,   float value);
     void fs_add_field_metainfo_d(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length,  double value);
     void fs_add_field_metainfo_s(void* serializer, const char* fieldname, int fieldname_length, const char* name, int name_length, const char* value, int value_length);
@@ -72,11 +75,13 @@ extern "C"
     void fs_savepoint_get_types(void* savepoint, int* types);
     void fs_get_savepoint_metainfo_b(void* savepoint, const char* name, int name_length,   bool* value);
     void fs_get_savepoint_metainfo_i(void* savepoint, const char* name, int name_length,    int* value);
+    void fs_get_savepoint_metainfo_l(void* savepoint, const char* name, int name_length,  long* value);
     void fs_get_savepoint_metainfo_f(void* savepoint, const char* name, int name_length,  float* value);
     void fs_get_savepoint_metainfo_d(void* savepoint, const char* name, int name_length, double* value);
     void fs_get_savepoint_metainfo_s(void* savepoint, const char* name, int name_length, char* value);
     void fs_add_savepoint_metainfo_b(void* savepoint, const char* name, int name_length,   bool value);
     void fs_add_savepoint_metainfo_i(void* savepoint, const char* name, int name_length,    int value);
+    void fs_add_savepoint_metainfo_l(void* savepoint, const char* name, int name_length,  long value);
     void fs_add_savepoint_metainfo_f(void* savepoint, const char* name, int name_length,  float value);
     void fs_add_savepoint_metainfo_d(void* savepoint, const char* name, int name_length, double value);
     void fs_add_savepoint_metainfo_s(void* savepoint, const char* name, int name_length, const char* value, int value_length);

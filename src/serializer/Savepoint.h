@@ -76,7 +76,7 @@ namespace ser {
          * in the savepoint. The order in which the metainformation is added
          * is irrelevant.
          *
-         * Supported types are booleans, integers, floating points and string.
+         * Supported types are booleans, integers, longs, floating points and string.
          *
          * @throw SerializationException The key exists already
          *
@@ -110,7 +110,7 @@ namespace ser {
          * The requirements for the JSON node are the following:
          *   - it contains exactly one child node named "name" with a string value
          *   - all other children are of one of the supported types
-         *     (boolean, integer, floating point, string)
+         *     (boolean, integer, long, floating point, string)
          *
          * @param node The JSON node that will be interpreted
          */

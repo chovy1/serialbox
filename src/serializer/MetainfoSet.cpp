@@ -18,12 +18,14 @@ static inline int getAnyTypeVal(const boost::any& a)
         return 0;
     if (t == typeid(int))
         return 1;
-    if (t == typeid(float))
+    if (t == typeid(long))
         return 2;
-    if (t == typeid(double))
+    if (t == typeid(float))
         return 3;
-    if (t == typeid(std::string))
+    if (t == typeid(double))
         return 4;
+    if (t == typeid(std::string))
+        return 5;
     return -1;
 }
 
@@ -41,7 +43,7 @@ static int compareBase(const boost::any& a1, const boost::any& a2)
  *         +1 if a2 greater-than
  *
  * Different types:
- * bool < int < float < double < string
+ * bool < int < long < float < double < string
  */
 static int compareAny(const boost::any& a1, const boost::any& a2)
 {
@@ -63,6 +65,9 @@ static int compareAny(const boost::any& a1, const boost::any& a2)
         if(t == typeid(int))
             return compareBase<int>(a1, a2);
 
+        if(t == typeid(long))
+            return compareBase<long>(a1, a2);
+
         if(t == typeid(float))
             return compareBase<float>(a1, a2);
 
@@ -83,6 +88,7 @@ static std::string writeAny(const boost::any& a)
 
          if(t == typeid(bool)) ss << (boost::any_cast<bool>(a) ? "true" : "false");
     else if(t == typeid(int)) ss << boost::any_cast<int>(a);
+    else if(t == typeid(long)) ss << boost::any_cast<long>(a);
     else if(t == typeid(float)) ss << boost::any_cast<float>(a);
     else if(t == typeid(double)) ss << boost::any_cast<double>(a);
     else if(t == typeid(std::string)) ss << "\"" << boost::any_cast<std::string>(a) << "\"";
@@ -95,6 +101,7 @@ static JSONNode anyNode(const std::string name, const boost::any& a)
     const std::type_info& t = a.type();
          if(t == typeid(bool)) return JSONNode(name, boost::any_cast<bool>(a));
     else if(t == typeid(int)) return JSONNode(name, boost::any_cast<int>(a));
+    else if(t == typeid(long)) return JSONNode(name, boost::any_cast<long>(a));
     else if(t == typeid(float)) return JSONNode(name, boost::any_cast<float>(a));
     else if(t == typeid(double)) return JSONNode(name, boost::any_cast<double>(a));
     else if(t == typeid(std::string)) return JSONNode(name, boost::any_cast<std::string>(a));
@@ -143,10 +150,12 @@ std::vector<int> MetainfoSet::types() const
             ret.push_back(-1);
         else if (iter->second.type() == typeid(int))
             ret.push_back(-2);
-        else if (iter->second.type() == typeid(float))
+        else if (iter->second.type() == typeid(long))
             ret.push_back(-3);
-        else if (iter->second.type() == typeid(double))
+        else if (iter->second.type() == typeid(float))
             ret.push_back(-4);
+        else if (iter->second.type() == typeid(double))
+            ret.push_back(-5);
         else if (iter->second.type() == typeid(std::string))
             ret.push_back(boost::any_cast<std::string>(iter->second).size());
         else
@@ -172,6 +181,7 @@ bool MetainfoSet::AsBool(const std::string& key) const
 
          if(t == typeid(bool)) return boost::any_cast<bool>(a);
     else if(t == typeid(int)) return (bool)boost::any_cast<int>(a);
+    else if(t == typeid(long)) return (bool)boost::any_cast<long>(a);
     else if(t == typeid(float)) return (bool)boost::any_cast<float>(a);
     else if(t == typeid(double)) return (bool)boost::any_cast<double>(a);
     else if(t == typeid(std::string))
@@ -197,6 +207,19 @@ int MetainfoSet::AsInt(const std::string& key) const
 
          if(t == typeid(bool)) return boost::any_cast<bool>(a);
     else if(t == typeid(int)) return boost::any_cast<int>(a);
+    else if(t == typeid(long))
+    {
+        const long v = boost::any_cast<long>(a);
+        if (v == static_cast<long>(static_cast<int>(v))) return static_cast<int>(v);
+        else
+        {
+            SerializationException exception;
+            std::ostringstream ss;
+            ss << "Error: Trying to access the key " << key << " as int, but its value is " << v << "\n";
+            exception.Init(ss.str());
+            throw exception;
+        }
+    }
     else if(t == typeid(float))
     {
         const float v = boost::any_cast<float>(a);
@@ -238,6 +261,32 @@ int MetainfoSet::AsInt(const std::string& key) const
     return 0;
 }
 
+long MetainfoSet::AsLong(const std::string& key) const
+{
+    std::map<std::string, boost::any>::const_iterator iter = checkKeyExists(key);
+    const boost::any& a = iter->second;
+    const std::type_info& t = a.type();
+
+         if(t == typeid(bool)) return boost::any_cast<bool>(a);
+    else if(t == typeid(int)) return boost::any_cast<int>(a);
+    else if(t == typeid(long)) return boost::any_cast<long>(a);
+    else if(t == typeid(float)) return boost::any_cast<float>(a);
+    else if(t == typeid(double)) return boost::any_cast<double>(a);
+    else if(t == typeid(std::string))
+    {
+        long v;
+        std::stringstream ss;
+        ss << boost::any_cast<std::string>(a);
+        ss >> v;
+        return v;
+    }
+
+    // Reaching this point is a bug.
+    std::cerr << "Bug in MetainfoSet: type of '" << key << "' not recognized\n";
+    std::exit(1);
+    return (long)0;
+}
+
 float MetainfoSet::AsFloat(const std::string& key) const
 {
     std::map<std::string, boost::any>::const_iterator iter = checkKeyExists(key);
@@ -263,7 +312,7 @@ float MetainfoSet::AsFloat(const std::string& key) const
     return (float)0.;
 }
 
-float MetainfoSet::AsDouble(const std::string& key) const
+double MetainfoSet::AsDouble(const std::string& key) const
 {
     std::map<std::string, boost::any>::const_iterator iter = checkKeyExists(key);
     const boost::any& a = iter->second;
@@ -271,11 +320,12 @@ float MetainfoSet::AsDouble(const std::string& key) const
 
          if(t == typeid(bool)) return boost::any_cast<bool>(a);
     else if(t == typeid(int)) return boost::any_cast<int>(a);
+    else if(t == typeid(long)) return boost::any_cast<int>(a);
     else if(t == typeid(float)) return boost::any_cast<float>(a);
     else if(t == typeid(double)) return boost::any_cast<double>(a);
     else if(t == typeid(std::string))
     {
-        float v;
+        double v;
         std::stringstream ss;
         ss << boost::any_cast<std::string>(a);
         ss >> v;
@@ -297,6 +347,7 @@ std::string MetainfoSet::AsString(const std::string& key) const
 
          if(t == typeid(bool)) ss << std::boolalpha << boost::any_cast<bool>(a);
     else if(t == typeid(int)) ss << boost::any_cast<int>(a);
+    else if(t == typeid(long)) ss << boost::any_cast<long>(a);
     else if(t == typeid(float)) ss << boost::any_cast<float>(a);
     else if(t == typeid(double)) ss << boost::any_cast<double>(a);
     else if(t == typeid(std::string)) ss << boost::any_cast<std::string>(a);
