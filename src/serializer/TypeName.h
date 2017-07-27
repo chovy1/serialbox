@@ -14,6 +14,7 @@ inline std::string type_name();
     inline std::string type_name<type>() { return #type ; }
 
 TYPENAMEFUNCTION(int)
+TYPENAMEFUNCTION(long)
 TYPENAMEFUNCTION(float)
 TYPENAMEFUNCTION(double)
 
