@@ -877,6 +877,7 @@ SUBROUTINE fs_check_size(serializer, fieldname, data_type, rank, bytes_per_eleme
     element_size = fs_get_element_size(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname))
     IF (element_size /= bytes_per_element) THEN
       write(*,*) "Error: field ", fieldname, " registered with different data type"
+      write(*,*) "Size expected: ", bytes_per_element, ', actually: ', element_size
       STOP
     END IF
 
@@ -2022,7 +2023,7 @@ SUBROUTINE fs_read_long_0d(serializer, savepoint, fieldname, field)
   padd=>field
 
   IF (fs_field_exists(serializer, fieldname)) THEN
-    CALL fs_check_size(serializer, fieldname, "long", 0, fs_intsize(), 1, 1, 1, 1)
+    CALL fs_check_size(serializer, fieldname, "long", 0, fs_longsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), C_LOC(padd), &
