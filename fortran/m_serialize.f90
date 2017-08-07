@@ -226,9 +226,9 @@ PRIVATE
 
 
   !==============================================================================
-  !+ Module interface to allocate the given pointer field
+  !+ Module interface to allocate the given pointer or allocatable field
   !------------------------------------------------------------------------------
-  INTERFACE fs_allocate_pointer
+  INTERFACE fs_allocate_array
     MODULE PROCEDURE &
       fs_allocate_pointer_int_1d, &
       fs_allocate_pointer_int_2d, &
@@ -250,8 +250,29 @@ PRIVATE
       fs_allocate_pointer_double_2d, &
       fs_allocate_pointer_double_3d, &
       fs_allocate_pointer_double_4d, &
-      fs_allocate_pointer_chars_1d
-  END INTERFACE fs_allocate_pointer
+      fs_allocate_pointer_chars_1d, &
+      fs_allocate_allocatable_int_1d, &
+      fs_allocate_allocatable_int_2d, &
+      fs_allocate_allocatable_int_3d, &
+      fs_allocate_allocatable_int_4d, &
+      fs_allocate_allocatable_long_1d, &
+      fs_allocate_allocatable_long_2d, &
+      fs_allocate_allocatable_long_3d, &
+      fs_allocate_allocatable_long_4d, &
+      fs_allocate_allocatable_logical_1d, &
+      fs_allocate_allocatable_logical_2d, &
+      fs_allocate_allocatable_logical_3d, &
+      fs_allocate_allocatable_logical_4d, &
+      fs_allocate_allocatable_float_1d, &
+      fs_allocate_allocatable_float_2d, &
+      fs_allocate_allocatable_float_3d, &
+      fs_allocate_allocatable_float_4d, &
+      fs_allocate_allocatable_double_1d, &
+      fs_allocate_allocatable_double_2d, &
+      fs_allocate_allocatable_double_3d, &
+      fs_allocate_allocatable_double_4d, &
+      fs_allocate_allocatable_chars_1d
+  END INTERFACE fs_allocate_array
 
 
   !==============================================================================
@@ -281,6 +302,35 @@ PRIVATE
       fs_allocate_allocatable_double_4d, &
       fs_allocate_allocatable_chars_1d
   END INTERFACE fs_allocate_allocatable
+
+
+  !==============================================================================
+  !+ Module interface to allocate the given pointer field
+  !------------------------------------------------------------------------------
+  INTERFACE fs_allocate_pointer
+    MODULE PROCEDURE &
+      fs_allocate_pointer_int_1d, &
+      fs_allocate_pointer_int_2d, &
+      fs_allocate_pointer_int_3d, &
+      fs_allocate_pointer_int_4d, &
+      fs_allocate_pointer_long_1d, &
+      fs_allocate_pointer_long_2d, &
+      fs_allocate_pointer_long_3d, &
+      fs_allocate_pointer_long_4d, &
+      fs_allocate_pointer_logical_1d, &
+      fs_allocate_pointer_logical_2d, &
+      fs_allocate_pointer_logical_3d, &
+      fs_allocate_pointer_logical_4d, &
+      fs_allocate_pointer_float_1d, &
+      fs_allocate_pointer_float_2d, &
+      fs_allocate_pointer_float_3d, &
+      fs_allocate_pointer_float_4d, &
+      fs_allocate_pointer_double_1d, &
+      fs_allocate_pointer_double_2d, &
+      fs_allocate_pointer_double_3d, &
+      fs_allocate_pointer_double_4d, &
+      fs_allocate_pointer_chars_1d
+  END INTERFACE fs_allocate_pointer
 
 CONTAINS
 
