@@ -35,7 +35,8 @@ PUBLIC :: &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
   fs_field_exists, fs_get_field_size, fs_get_field_bounds, fs_register_field, fs_add_field_metainfo, fs_write_field, &
   fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo, &
-  fs_allocate_allocatable, fs_allocate_pointer, fs_register_derived_type_field
+  fs_allocate_allocatable, fs_allocate_pointer, fs_register_derived_type_field, &
+  ignore_bullshit, ignore_bullshit_max_dim_size, ignore_bullshit_allow_negative_indices
 
 PRIVATE
 
@@ -331,6 +332,10 @@ PRIVATE
       fs_allocate_pointer_double_4d, &
       fs_allocate_pointer_chars_1d
   END INTERFACE fs_allocate_pointer
+
+  LOGICAL :: ignore_bullshit = .TRUE.
+  INTEGER :: ignore_bullshit_max_dim_size = 999999999
+  LOGICAL :: ignore_bullshit_allow_negative_indices = .FALSE.
 
 CONTAINS
 
@@ -1130,16 +1135,22 @@ SUBROUTINE fs_register_derived_type_field(serializer, fieldname, data_type, lbou
   INTEGER, DIMENSION(:), INTENT(in), OPTIONAL :: lbounds, ubounds
   INTEGER, DIMENSION(4) :: sizes, lb4d, ub4d
   INTEGER :: rank
+  LOGICAL :: bullshit
 
-  IF(.NOT. fs_field_exists(serializer, fieldname) .AND. fs_serializer_openmode(serializer) /= 'r') THEN
+  bullshit = .FALSE.
+  IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(ABS(ubounds - lbounds) > ignore_bullshit_max_dim_size) .OR. &
+              (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+  END IF
+
+  IF(.NOT. fs_field_exists(serializer, fieldname) .AND. fs_serializer_openmode(serializer) /= 'r' &
+     .AND. (.NOT. ignore_bullshit .OR. .NOT. bullshit)) THEN
     rank = 0
     lb4d = (/ 1, 1, 1, 1 /)
-    IF (PRESENT(lbounds)) THEN
+    ub4d = (/ 1, 1, 1, 1 /)
+    IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
       rank = SIZE(lbounds)
       lb4d(1:SIZE(lbounds)) = lbounds
-    END IF
-    ub4d = (/ 1, 1, 1, 1 /)
-    IF (PRESENT(ubounds)) THEN
       ub4d(1:SIZE(ubounds)) = ubounds
     END IF
     sizes = ABS(ub4d - lb4d) + 1
@@ -1162,11 +1173,13 @@ SUBROUTINE fs_write_int_0d(serializer, savepoint, fieldname, field)
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field)
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 0, fs_intsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1189,11 +1202,15 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = (.NOT. ASSOCIATED(padd, field)) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 1, fs_intsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1220,11 +1237,16 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 2, fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1252,11 +1274,17 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+           .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+           .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 3, fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1285,11 +1313,18 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+           .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
+           .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 4, fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1318,11 +1353,13 @@ SUBROUTINE fs_write_long_0d(serializer, savepoint, fieldname, field)
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd)
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 0, fs_longsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1345,11 +1382,15 @@ SUBROUTINE fs_write_long_1d(serializer, savepoint, fieldname, field, lbounds, ub
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 1, fs_longsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1376,11 +1417,16 @@ SUBROUTINE fs_write_long_2d(serializer, savepoint, fieldname, field, lbounds, ub
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 2, fs_longsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1408,11 +1454,17 @@ SUBROUTINE fs_write_long_3d(serializer, savepoint, fieldname, field, lbounds, ub
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 3, fs_longsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1441,11 +1493,18 @@ SUBROUTINE fs_write_long_4d(serializer, savepoint, fieldname, field, lbounds, ub
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 4, fs_longsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                    SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1583,11 +1642,13 @@ SUBROUTINE fs_write_float_0d(serializer, savepoint, fieldname, field)
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd)
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 0, fs_floatsize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1610,11 +1671,15 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 1, fs_floatsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1641,11 +1706,16 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 2, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1672,11 +1742,17 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 3, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1704,11 +1780,18 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 4, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
                                                                        SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
@@ -1737,11 +1820,13 @@ SUBROUTINE fs_write_double_0d(serializer, savepoint, fieldname, field)
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd)
 
-  IF (ASSOCIATED(padd)) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 0, fs_doublesize(), 1, 1, 1, 1)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1764,11 +1849,15 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 1, fs_doublesize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1795,13 +1884,16 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
-
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 2, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
 
     CALL fs_compute_strides(serializer%serializer_ptr, TRIM(fieldname), LEN_TRIM(fieldname), &
@@ -1828,11 +1920,17 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 3, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
                        lbounds, ubounds)
 
@@ -1860,11 +1958,18 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
   ! Local variables
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
+             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
 
-  IF (ASSOCIATED(padd) .AND. SIZE(padd) > 0) THEN
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 4, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
                                                                          SIZE(field, 3), SIZE(field, 4), lbounds, ubounds)
 
