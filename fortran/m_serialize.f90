@@ -1206,9 +1206,10 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
-  bullshit = (.NOT. ASSOCIATED(padd, field)) &
-             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
+  bullshit = .NOT. ASSOCIATED(padd, field) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 1, fs_intsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
@@ -1243,8 +1244,10 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
   padd=>field
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 2, fs_intsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
@@ -1281,8 +1284,10 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
   bullshit = .NOT. ASSOCIATED(padd, field) &
            .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
            .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-           .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 3, fs_intsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
@@ -1321,8 +1326,10 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
            .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
            .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
            .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-           .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
-           .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+           .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "int", 4, fs_intsize(), SIZE(field, 1), SIZE(field, 2), &
@@ -1386,9 +1393,10 @@ SUBROUTINE fs_write_long_1d(serializer, savepoint, fieldname, field, lbounds, ub
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
-  bullshit = .NOT. ASSOCIATED(padd, field) &
-             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
+  bullshit = .NOT. ASSOCIATED(padd, field) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 1, fs_longsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
@@ -1423,8 +1431,10 @@ SUBROUTINE fs_write_long_2d(serializer, savepoint, fieldname, field, lbounds, ub
   padd=>field
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 2, fs_longsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
@@ -1461,8 +1471,10 @@ SUBROUTINE fs_write_long_3d(serializer, savepoint, fieldname, field, lbounds, ub
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 3, fs_longsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
@@ -1501,8 +1513,10 @@ SUBROUTINE fs_write_long_4d(serializer, savepoint, fieldname, field, lbounds, ub
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "long", 4, fs_longsize(), SIZE(field, 1), SIZE(field, 2), &
@@ -1675,9 +1689,10 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
-  bullshit = .NOT. ASSOCIATED(padd, field) &
-             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
+  bullshit = .NOT. ASSOCIATED(padd, field) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 1, fs_floatsize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
@@ -1712,8 +1727,10 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
   padd=>field
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 2, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
@@ -1749,8 +1766,10 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 3, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
@@ -1788,8 +1807,10 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "float", 4, fs_floatsize(), SIZE(field, 1), SIZE(field, 2), &
@@ -1853,9 +1874,10 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
-  bullshit = .NOT. ASSOCIATED(padd, field) &
-             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (lbounds(1) < 0 .OR. ubounds(1) < 0))
+  bullshit = .NOT. ASSOCIATED(padd, field) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 1, fs_doublesize(), SIZE(field, 1), 1, 1, 1, lbounds, ubounds)
@@ -1890,8 +1912,10 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
   padd=>field
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 2, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), 1, 1, lbounds, ubounds)
@@ -1927,8 +1951,10 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   bullshit = .NOT. ASSOCIATED(padd, field) &
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 3, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), 1, &
@@ -1966,8 +1992,10 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
              .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
              .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
-             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size &
-             .OR. (.NOT. ignore_bullshit_allow_negative_indices .AND. (ANY(lbounds < 0) .OR. ANY(ubounds < 0)))
+             .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
 
   IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
     CALL fs_check_size(serializer, fieldname, "double", 4, fs_doublesize(), SIZE(field, 1), SIZE(field, 2), &
