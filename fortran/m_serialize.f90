@@ -187,7 +187,10 @@ PRIVATE
       fs_write_double_3d, &
       fs_write_double_4d, &
       fs_write_chars_0d, &
-      fs_write_chars_1d
+      fs_write_chars_1d, &
+      fs_write_chars_2d, &
+      fs_write_chars_3d, &
+      fs_write_chars_4d
   END INTERFACE fs_write_field
 
 
@@ -222,7 +225,10 @@ PRIVATE
       fs_read_double_3d, &
       fs_read_double_4d, &
       fs_read_chars_0d, &
-      fs_read_chars_1d
+      fs_read_chars_1d, &
+      fs_read_chars_2d, &
+      fs_read_chars_3d, &
+      fs_read_chars_4d
   END INTERFACE fs_read_field
 
 
@@ -1550,7 +1556,7 @@ SUBROUTINE fs_write_logical_0d(serializer, savepoint, fieldname, field)
     field_int = 1
   ELSE
     field_int = 0
-  ENDIF
+  END IF
 
   CALL fs_write_int_0d(serializer, savepoint, fieldname, field_int)
 
@@ -1567,12 +1573,23 @@ SUBROUTINE fs_write_logical_1d(serializer, savepoint, fieldname, field, lbounds,
   INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
 
   INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1))
+  LOGICAL, POINTER :: padd(:)
+  LOGICAL :: bullshit
 
-  WHERE(field(:))
-    field_int(:) = 1
-  ELSEWHERE
-    field_int(:) = 0
-  END WHERE
+  ! This workaround is needed for gcc < 4.9
+  padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
+  END IF
+
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
+    WHERE(field(:))
+      field_int(:) = 1
+    ELSEWHERE
+      field_int(:) = 0
+    END WHERE
+  END IF
 
   CALL fs_write_int_1d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
 
@@ -1589,12 +1606,25 @@ SUBROUTINE fs_write_logical_2d(serializer, savepoint, fieldname, field, lbounds,
   INTEGER, DIMENSION(2), INTENT(IN), OPTIONAL :: lbounds, ubounds
 
   INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2))
+  LOGICAL, POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
-  WHERE(field(:,:))
-    field_int(:,:) = 1
-  ELSEWHERE
-    field_int(:,:) = 0
-  END WHERE
+  ! This workaround is needed for gcc < 4.9
+  padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+             .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+             .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
+
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
+    WHERE(field(:,:))
+      field_int(:,:) = 1
+    ELSEWHERE
+      field_int(:,:) = 0
+    END WHERE
+  END IF
 
   CALL fs_write_int_2d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
 
@@ -1611,12 +1641,26 @@ SUBROUTINE fs_write_logical_3d(serializer, savepoint, fieldname, field, lbounds,
   INTEGER, DIMENSION(3), INTENT(IN), OPTIONAL :: lbounds, ubounds
 
   INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3))
+  LOGICAL, POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
 
-  WHERE(field(:,:,:))
-    field_int(:,:,:) = 1
-  ELSEWHERE
-    field_int(:,:,:) = 0
-  END WHERE
+  ! This workaround is needed for gcc < 4.9
+  padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+           .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
+
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
+    WHERE(field(:,:,:))
+      field_int(:,:,:) = 1
+    ELSEWHERE
+      field_int(:,:,:) = 0
+    END WHERE
+  END IF
 
   CALL fs_write_int_3d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
 
@@ -1633,12 +1677,27 @@ SUBROUTINE fs_write_logical_4d(serializer, savepoint, fieldname, field, lbounds,
   INTEGER, DIMENSION(4), INTENT(IN), OPTIONAL :: lbounds, ubounds
 
   INTEGER(KIND=C_INT) :: field_int(SIZE(field, 1), SIZE(field, 2), SIZE(field, 3), SIZE(field, 4))
+  LOGICAL, POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
-  WHERE(field(:,:,:,:))
-    field_int(:,:,:,:) = 1
-  ELSEWHERE
-    field_int(:,:,:,:) = 0
-  END WHERE
+  ! This workaround is needed for gcc < 4.9
+  padd=>field
+  bullshit = .NOT. ASSOCIATED(padd, field) &
+           .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 2) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 3) > ignore_bullshit_max_dim_size &
+           .OR. SIZE(field, 4) > ignore_bullshit_max_dim_size
+  IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices .AND. PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+    bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
+  END IF
+
+  IF (.NOT. ignore_bullshit .OR. .NOT. bullshit) THEN
+    WHERE(field(:,:,:,:))
+      field_int(:,:,:,:) = 1
+    ELSEWHERE
+      field_int(:,:,:,:) = 0
+    END WHERE
+  END IF
 
   CALL fs_write_int_4d(serializer, savepoint, fieldname, field_int, lbounds, ubounds)
 
@@ -2027,8 +2086,6 @@ SUBROUTINE fs_write_chars_0d(serializer, savepoint, fieldname, field)
 
 END SUBROUTINE fs_write_chars_0d
 
-!=============================================================================
-!=============================================================================
 
 SUBROUTINE fs_write_chars_1d(serializer, savepoint, fieldname, field, lbounds, ubounds)
   TYPE(t_serializer), INTENT(IN)          :: serializer
@@ -2040,6 +2097,42 @@ SUBROUTINE fs_write_chars_1d(serializer, savepoint, fieldname, field, lbounds, u
   !TODO Characters not supported yet !
 
 END SUBROUTINE fs_write_chars_1d
+
+
+SUBROUTINE fs_write_chars_2d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
+  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:)
+  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  !TODO Characters not supported yet !
+
+END SUBROUTINE fs_write_chars_2d
+
+
+SUBROUTINE fs_write_chars_3d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
+  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:,:)
+  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  !TODO Characters not supported yet !
+
+END SUBROUTINE fs_write_chars_3d
+
+
+SUBROUTINE fs_write_chars_4d(serializer, savepoint, fieldname, field, lbounds, ubounds)
+  TYPE(t_serializer), INTENT(IN)          :: serializer
+  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
+  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
+  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:,:,:)
+  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
+
+  !TODO Characters not supported yet !
+
+END SUBROUTINE fs_write_chars_4d
 
 !=============================================================================
 !=============================================================================
@@ -2748,6 +2841,39 @@ SUBROUTINE fs_read_chars_1d(serializer, savepoint, fieldname, field)
   field = ""
 
 END SUBROUTINE fs_read_chars_1d
+
+SUBROUTINE fs_read_chars_2d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:)
+
+  !TODO Characters not supported yet !
+  field = ""
+
+END SUBROUTINE fs_read_chars_2d
+
+SUBROUTINE fs_read_chars_3d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:,:)
+
+  !TODO Characters not supported yet !
+  field = ""
+
+END SUBROUTINE fs_read_chars_3d
+
+SUBROUTINE fs_read_chars_4d(serializer, savepoint, fieldname, field)
+  TYPE(t_serializer), INTENT(IN)           :: serializer
+  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
+  CHARACTER(LEN=*)                         :: fieldname
+  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:,:,:)
+
+  !TODO Characters not supported yet !
+  field = ""
+
+END SUBROUTINE fs_read_chars_4d
 
 !=============================================================================
 !=============================================================================
