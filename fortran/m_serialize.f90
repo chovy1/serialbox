@@ -185,12 +185,7 @@ PRIVATE
       fs_write_double_1d, &
       fs_write_double_2d, &
       fs_write_double_3d, &
-      fs_write_double_4d, &
-      fs_write_chars_0d, &
-      fs_write_chars_1d, &
-      fs_write_chars_2d, &
-      fs_write_chars_3d, &
-      fs_write_chars_4d
+      fs_write_double_4d
   END INTERFACE fs_write_field
 
 
@@ -223,12 +218,7 @@ PRIVATE
       fs_read_double_1d, &
       fs_read_double_2d, &
       fs_read_double_3d, &
-      fs_read_double_4d, &
-      fs_read_chars_0d, &
-      fs_read_chars_1d, &
-      fs_read_chars_2d, &
-      fs_read_chars_3d, &
-      fs_read_chars_4d
+      fs_read_double_4d
   END INTERFACE fs_read_field
 
 
@@ -2076,67 +2066,6 @@ END SUBROUTINE fs_write_double_4d
 !=============================================================================
 !=============================================================================
 
-SUBROUTINE fs_write_chars_0d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)          :: serializer
-  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  CHARACTER(LEN=*), INTENT(IN)            :: field
-
-  !TODO Characters not supported yet !
-
-END SUBROUTINE fs_write_chars_0d
-
-
-SUBROUTINE fs_write_chars_1d(serializer, savepoint, fieldname, field, lbounds, ubounds)
-  TYPE(t_serializer), INTENT(IN)          :: serializer
-  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  CHARACTER(LEN=*), INTENT(IN)            :: field(:)
-  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
-
-  !TODO Characters not supported yet !
-
-END SUBROUTINE fs_write_chars_1d
-
-
-SUBROUTINE fs_write_chars_2d(serializer, savepoint, fieldname, field, lbounds, ubounds)
-  TYPE(t_serializer), INTENT(IN)          :: serializer
-  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:)
-  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
-
-  !TODO Characters not supported yet !
-
-END SUBROUTINE fs_write_chars_2d
-
-
-SUBROUTINE fs_write_chars_3d(serializer, savepoint, fieldname, field, lbounds, ubounds)
-  TYPE(t_serializer), INTENT(IN)          :: serializer
-  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:,:)
-  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
-
-  !TODO Characters not supported yet !
-
-END SUBROUTINE fs_write_chars_3d
-
-
-SUBROUTINE fs_write_chars_4d(serializer, savepoint, fieldname, field, lbounds, ubounds)
-  TYPE(t_serializer), INTENT(IN)          :: serializer
-  TYPE(t_savepoint) , INTENT(IN)          :: savepoint
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  CHARACTER(LEN=*), INTENT(IN)            :: field(:,:,:,:)
-  INTEGER, DIMENSION(1), INTENT(IN), OPTIONAL :: lbounds, ubounds
-
-  !TODO Characters not supported yet !
-
-END SUBROUTINE fs_write_chars_4d
-
-!=============================================================================
-!=============================================================================
-
 SUBROUTINE fs_read_int_0d(serializer, savepoint, fieldname, field)
   TYPE(t_serializer), INTENT(IN)           :: serializer
   TYPE(t_savepoint) , INTENT(IN)           :: savepoint
@@ -2815,65 +2744,6 @@ SUBROUTINE fs_read_double_4d(serializer, savepoint, fieldname, field)
                         C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
   END IF
 END SUBROUTINE fs_read_double_4d
-
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE fs_read_chars_0d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)           :: serializer
-  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
-  CHARACTER(LEN=*)                         :: fieldname
-  CHARACTER(LEN=*), INTENT(OUT)            :: field
-
-  !TODO Characters not supported yet !
-  field = ""
-
-END SUBROUTINE fs_read_chars_0d
-
-SUBROUTINE fs_read_chars_1d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)           :: serializer
-  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
-  CHARACTER(LEN=*)                         :: fieldname
-  CHARACTER(LEN=*), INTENT(OUT)            :: field(:)
-
-  !TODO Characters not supported yet !
-  field = ""
-
-END SUBROUTINE fs_read_chars_1d
-
-SUBROUTINE fs_read_chars_2d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)           :: serializer
-  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
-  CHARACTER(LEN=*)                         :: fieldname
-  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:)
-
-  !TODO Characters not supported yet !
-  field = ""
-
-END SUBROUTINE fs_read_chars_2d
-
-SUBROUTINE fs_read_chars_3d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)           :: serializer
-  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
-  CHARACTER(LEN=*)                         :: fieldname
-  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:,:)
-
-  !TODO Characters not supported yet !
-  field = ""
-
-END SUBROUTINE fs_read_chars_3d
-
-SUBROUTINE fs_read_chars_4d(serializer, savepoint, fieldname, field)
-  TYPE(t_serializer), INTENT(IN)           :: serializer
-  TYPE(t_savepoint) , INTENT(IN)           :: savepoint
-  CHARACTER(LEN=*)                         :: fieldname
-  CHARACTER(LEN=*), INTENT(OUT)            :: field(:,:,:,:)
-
-  !TODO Characters not supported yet !
-  field = ""
-
-END SUBROUTINE fs_read_chars_4d
 
 !=============================================================================
 !=============================================================================
