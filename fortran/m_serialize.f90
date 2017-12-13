@@ -35,7 +35,7 @@ PUBLIC :: &
   fs_create_savepoint, fs_destroy_savepoint, fs_add_savepoint_metainfo, &
   fs_field_exists, fs_get_field_size, fs_get_field_bounds, fs_register_field, fs_add_field_metainfo, fs_write_field, &
   fs_read_field, fs_enable_serialization, fs_disable_serialization, fs_print_debuginfo, &
-  fs_allocate_allocatable, fs_allocate_pointer, fs_register_derived_type_field, &
+  fs_allocate_array, fs_allocate_allocatable, fs_allocate_pointer, fs_register_derived_type_field, &
   ignore_bullshit, ignore_bullshit_max_dim_size, ignore_bullshit_allow_negative_indices
 
 PRIVATE
