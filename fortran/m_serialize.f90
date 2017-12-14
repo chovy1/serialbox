@@ -1994,6 +1994,7 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:)
   LOGICAL :: bullshit
+  CHARACTER(21) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -2019,6 +2020,8 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
+    WRITE (loc,'(Z12)') C_LOC(field)
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
   END IF
 END SUBROUTINE fs_write_double_3d
 
