@@ -373,6 +373,32 @@ FUNCTION fs_doublesize()
   fs_doublesize = INT(SIZE(TRANSFER(doublevalue, buffer)))
 END FUNCTION fs_doublesize
 
+FUNCTION fs_loc(field)
+
+  TYPE(C_PTR), INTENT(in) :: field
+  INTEGER(KIND=C_INTPTR_T) :: fs_loc
+
+  INTERFACE
+     SUBROUTINE fs_loc_(field, loc) &
+          BIND(c, name='fs_loc')
+       USE, INTRINSIC :: iso_c_binding
+       TYPE(C_PTR), INTENT(IN), VALUE :: field
+       INTEGER(C_INTPTR_T), INTENT(OUT)   :: loc
+     END SUBROUTINE fs_loc_
+  END INTERFACE
+
+  CALL fs_loc_(field, fs_loc)
+
+END FUNCTION fs_loc
+
+FUNCTION fs_loc_hex(field)
+
+  TYPE(C_PTR), INTENT(in) :: field
+  CHARACTER(16) :: fs_loc_hex
+
+  WRITE (fs_loc_hex,'(Z16)') fs_loc(field)
+
+END FUNCTION fs_loc_hex
 
 !==============================================================================
 !+ Module procedure that creates a new serializer object.
