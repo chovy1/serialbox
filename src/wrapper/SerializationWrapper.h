@@ -2,6 +2,8 @@
 //This file is released under terms of BSD license`
 //See LICENSE.txt for more information
 
+#include <stdint.h>
+
 extern "C"
 {
     // Management of serializers
@@ -96,4 +98,5 @@ extern "C"
                             const void* base_ptr, const void* iplus1, const void* jplus1, const void* kplus1, const void* lplus1,
                             int* istride, int* jstride, int* kstride, int* lstride);
     int fs_field_exists_at_savepoint(void* serializer, void* savepoint, const char* fieldname, int fieldname_length);
+    void fs_loc(const void* basePtr, intptr_t* loc);
 }

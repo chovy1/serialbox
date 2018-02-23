@@ -568,3 +568,7 @@ int fs_field_exists_at_savepoint(void* serializer, void* savepoint, const char* 
     return std::find(ff.begin(), ff.end(), name) != ff.end() ? 1 : 0;
 }
 
+void fs_loc(const void* basePtr, intptr_t* loc)
+{
+	*loc = (long) basePtr;
+}
