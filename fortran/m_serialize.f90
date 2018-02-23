@@ -1158,7 +1158,6 @@ SUBROUTINE fs_register_derived_type_field(serializer, fieldname, data_type, lbou
   INTEGER, DIMENSION(4) :: sizes, lb4d, ub4d
   INTEGER :: rank
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   bullshit = .FALSE.
   IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
@@ -1197,7 +1196,6 @@ SUBROUTINE fs_write_int_0d(serializer, savepoint, fieldname, field)
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1212,8 +1210,7 @@ SUBROUTINE fs_write_int_0d(serializer, savepoint, fieldname, field)
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_int_0d
 
@@ -1229,7 +1226,6 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1251,8 +1247,7 @@ SUBROUTINE fs_write_int_1d(serializer, savepoint, fieldname, field, lbounds, ubo
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_int_1d
 
@@ -1268,7 +1263,6 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1292,8 +1286,7 @@ SUBROUTINE fs_write_int_2d(serializer, savepoint, fieldname, field, lbounds, ubo
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 
 END SUBROUTINE fs_write_int_2d
@@ -1310,7 +1303,6 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1337,8 +1329,7 @@ SUBROUTINE fs_write_int_3d(serializer, savepoint, fieldname, field, lbounds, ubo
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_int_3d
 
@@ -1354,7 +1345,6 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_INT), POINTER :: padd(:,:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1381,8 +1371,7 @@ SUBROUTINE fs_write_int_4d(serializer, savepoint, fieldname, field, lbounds, ubo
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_int_4d
 
@@ -1399,7 +1388,6 @@ SUBROUTINE fs_write_long_0d(serializer, savepoint, fieldname, field)
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1414,8 +1402,7 @@ SUBROUTINE fs_write_long_0d(serializer, savepoint, fieldname, field)
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_long_0d
 
@@ -1431,7 +1418,6 @@ SUBROUTINE fs_write_long_1d(serializer, savepoint, fieldname, field, lbounds, ub
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1453,8 +1439,7 @@ SUBROUTINE fs_write_long_1d(serializer, savepoint, fieldname, field, lbounds, ub
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_long_1d
 
@@ -1470,7 +1455,6 @@ SUBROUTINE fs_write_long_2d(serializer, savepoint, fieldname, field, lbounds, ub
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1494,8 +1478,7 @@ SUBROUTINE fs_write_long_2d(serializer, savepoint, fieldname, field, lbounds, ub
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 
 END SUBROUTINE fs_write_long_2d
@@ -1512,7 +1495,6 @@ SUBROUTINE fs_write_long_3d(serializer, savepoint, fieldname, field, lbounds, ub
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1539,8 +1521,7 @@ SUBROUTINE fs_write_long_3d(serializer, savepoint, fieldname, field, lbounds, ub
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_long_3d
 
@@ -1556,7 +1537,6 @@ SUBROUTINE fs_write_long_4d(serializer, savepoint, fieldname, field, lbounds, ub
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1583,8 +1563,7 @@ SUBROUTINE fs_write_long_4d(serializer, savepoint, fieldname, field, lbounds, ub
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_long_4d
 
@@ -1763,7 +1742,6 @@ SUBROUTINE fs_write_float_0d(serializer, savepoint, fieldname, field)
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1778,8 +1756,7 @@ SUBROUTINE fs_write_float_0d(serializer, savepoint, fieldname, field)
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_float_0d
 
@@ -1795,7 +1772,6 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1817,8 +1793,7 @@ SUBROUTINE fs_write_float_1d(serializer, savepoint, fieldname, field, lbounds, u
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                          C_LOC(padd(1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_float_1d
 
@@ -1834,7 +1809,6 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1858,8 +1832,7 @@ SUBROUTINE fs_write_float_2d(serializer, savepoint, fieldname, field, lbounds, u
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_float_2d
 
@@ -1875,7 +1848,6 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1901,8 +1873,7 @@ SUBROUTINE fs_write_float_3d(serializer, savepoint, fieldname, field, lbounds, u
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_float_3d
 
@@ -1918,7 +1889,6 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1945,8 +1915,7 @@ SUBROUTINE fs_write_float_4d(serializer, savepoint, fieldname, field, lbounds, u
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_float_4d
 
@@ -1963,7 +1932,6 @@ SUBROUTINE fs_write_double_0d(serializer, savepoint, fieldname, field)
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -1978,8 +1946,7 @@ SUBROUTINE fs_write_double_0d(serializer, savepoint, fieldname, field)
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_double_0d
 
@@ -1995,7 +1962,6 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -2017,8 +1983,7 @@ SUBROUTINE fs_write_double_1d(serializer, savepoint, fieldname, field, lbounds, 
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_double_1d
 
@@ -2034,7 +1999,6 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -2058,8 +2022,7 @@ SUBROUTINE fs_write_double_2d(serializer, savepoint, fieldname, field, lbounds, 
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_double_2d
 
@@ -2075,7 +2038,6 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -2101,8 +2063,7 @@ SUBROUTINE fs_write_double_3d(serializer, savepoint, fieldname, field, lbounds, 
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                         C_LOC(padd(1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_double_3d
 
@@ -2118,7 +2079,6 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
   INTEGER(C_INT) :: istride, jstride, kstride, lstride
   REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:,:)
   LOGICAL :: bullshit
-  CHARACTER(16) :: loc
 
   ! This workaround is needed for gcc < 4.9
   padd=>field
@@ -2145,8 +2105,7 @@ SUBROUTINE fs_write_double_4d(serializer, savepoint, fieldname, field, lbounds, 
     CALL fs_write_field_(serializer%serializer_ptr, savepoint%savepoint_ptr, &
                          TRIM(fieldname), LEN_TRIM(fieldname), &
                           C_LOC(padd(1,1,1,1)), istride, jstride, kstride, lstride)
-    WRITE (loc,'(Z16)') C_LOC(field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(loc))
+    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'loc', TRIM(ADJUSTL(fs_loc_hex(C_LOC(field)))))
   END IF
 END SUBROUTINE fs_write_double_4d
 
